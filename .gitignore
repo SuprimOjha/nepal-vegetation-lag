@@ -1,19 +1,31 @@
-@"
 
-# Dependencies and generated files
+@'
+# Dependencies
 node_modules/
-.next/
-out/
 backend/.venv/
 __pycache__/
 *.py[cod]
+
+# Next.js
+.next/
+out/
+build/
+coverage/
 
 # Environment secrets
 .env
 .env.*
 !.env.example
 
-# Satellite data
+# Build artifacts
+*.tsbuildinfo
+
+# Local data and satellite rasters
+data/
 *.tif
 *.tiff
-"@ | Add-Content .gitignore
+
+# Editors and operating systems
+.DS_Store
+.vercel/
+'@ | Set-Content .gitignore
