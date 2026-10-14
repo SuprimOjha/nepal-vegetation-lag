@@ -6,8 +6,13 @@ export async function fetchDatasets() {
     if (!res.ok) throw new Error("Failed to fetch datasets");
     return await res.json();
   } catch (error) {
-    console.error("Backend error:", error);
-    return null;
+    console.warn("FastAPI server offline or unreachable. Using fallback datasets.");
+    return {
+      datasets: [
+        { short_name: "MOD13A3", name: "MODIS Vegetation Indices", format: "HDF4" },
+        { short_name: "GPM_3IMERGM", name: "GPM IMERG Precipitation", format: "NetCDF4" },
+      ],
+    };
   }
 }
 
@@ -17,7 +22,11 @@ export async function fetchRegions() {
     if (!res.ok) throw new Error("Failed to fetch regions");
     return await res.json();
   } catch (error) {
-    console.error("Backend error:", error);
-    return null;
+    console.warn("FastAPI server offline or unreachable. Using fallback regions.");
+    return {
+      regions: [
+        { id: "nepal_east", name: "Eastern Nepal", country: "Nepal", default_lag_months: 2, r: 0.68 },
+      ],
+    };
   }
 }
