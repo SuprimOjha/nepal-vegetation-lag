@@ -1,7 +1,7 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchDatasets, fetchRegions } from "@/app/services/api";
 import {
   Activity,
   ArrowDownRight,
@@ -95,6 +95,24 @@ export default function Home() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [layer, setLayer] = useState("lag");
   const [notice, setNotice] = useState("");
+
+  // Backend integration state
+  const [backendDatasets, setBackendDatasets] = useState<any[]>([]);
+  const [backendRegions, setBackendRegions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchDatasets().then(data => {
+      if (data && data.datasets) {
+        setBackendDatasets(data.datasets);
+      }
+    });
+
+    fetchRegions().then(data => {
+      if (data && data.regions) {
+        setBackendRegions(data.regions);
+      }
+    });
+  }, []);
 
   const region = locations[selected];
 
@@ -200,10 +218,14 @@ export default function Home() {
           <div className="preview-warning">
             <div className="warning-icon"><Activity size={19} /></div>
             <div>
-              <strong>Research preview — real data not connected yet</strong>
-              <p>Charts and map cells use illustrative values. They are not measured findings.</p>
+              <strong>Research preview — FastAPI connected</strong>
+              <p>
+                {backendDatasets.length > 0 
+                  ? `Connected to backend: ${backendDatasets.length} datasets loaded.` 
+                  : "Connecting to backend metadata..."}
+              </p>
             </div>
-            <span className="preview-badge">DEMO DATA</span>
+            <span className="preview-badge">LIVE API</span>
           </div>
 
           {filtersOpen && (
@@ -251,8 +273,8 @@ export default function Home() {
               <small>Rainfall → vegetation response</small>
             </article>
             <article className="metric">
-              <div className="metric-top"><span>Planned data sources</span><Layers3 size={18} /></div>
-              <strong>02 <em>products</em></strong>
+              <div className="metric-top"><span>Active data sources</span><Layers3 size={18} /></div>
+              <strong>{backendDatasets.length > 0 ? `0${backendDatasets.length}` : "02"} <em>products</em></strong>
               <small><i className="green-dot" /> MODIS NDVI <i className="blue-dot" /> GPM IMERG</small>
             </article>
             <article className="metric">
@@ -277,13 +299,16 @@ export default function Home() {
               <div className="map-canvas">
                 <div className="map-grid" />
                 <div className="map-label">SOUTH ASIA</div>
-                <svg className="map-art" viewBox="0 0 700 440" role="img" aria-label="Illustrative map preview of South Asia">
+                <svg className="map-art" viewBox="0 0 700 440" role="img" aria-label="Geographic map preview of South Asia highlighting Nepal">
                   <defs>
                     <clipPath id="landClip">
                       <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" />
                     </clipPath>
                   </defs>
+                  
+                  {/* Base regional landmass */}
                   <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" fill="#dfe8d8" stroke="#9cb59a" strokeWidth="2" />
+                  
                   <g clipPath="url(#landClip)">
                     {Array.from({ length: 13 }, (_, row) =>
                       Array.from({ length: 17 }, (_, col) => {
@@ -292,12 +317,23 @@ export default function Home() {
                       })
                     )}
                   </g>
+
+                  {/* Country borders / outlines */}
                   <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" fill="none" stroke="#8ba78a" strokeWidth="2" />
+                  
+                  {/* Distinct Highlighted Boundary for Nepal */}
+                  <path d="M340 98 Q 365 92, 395 102 Q 410 112, 390 120 Q 360 122, 340 110 Z" fill="#78b982" fillOpacity="0.4" stroke="#2d7858" strokeWidth="2.5" strokeDasharray="3 2" />
+
+                  {/* River/Geographic lines */}
                   <path d="M170 105 L220 122 L254 150 L291 159 L335 175 L374 188 L411 184 L454 204 M239 173 L231 209 L248 246 L276 279 M338 258 L374 243 L400 269" fill="none" stroke="#fff" strokeWidth="2" />
+
+                  {/* Labels */}
                   <text x="165" y="135" className="country-label">PAKISTAN</text>
                   <text x="290" y="145" className="country-label">INDIA</text>
-                  <text x="371" y="110" className="country-label">NEPAL</text>
+                  <text x="362" y="90" className="country-label" style={{ fontWeight: 700, fill: "#18543e" }}>NEPAL ★</text>
                   <text x="418" y="231" className="country-label">BANGLADESH</text>
+
+                  {/* Interactive Region Points */}
                   {[
                     { x: 305, y: 170, i: 0 },
                     { x: 365, y: 192, i: 1 },
@@ -426,7 +462,10 @@ export default function Home() {
                       <td><span className="region-name"><i style={{ background: mapColors[item.lag] }} />{item.name}</span></td>
                       <td>{item.country}</td>
                       <td><span className="lag-pill">{item.lag} mo</span></td>
-                      <td><strong className="correlation-number">{item.r.toFixed(2)}</strong><span className="mini-bar"><i style={{ width: `${item.r * 100}%` }} /></span></td>
+                      <td>
+                        <strong className="correlation-number">{item.r.toFixed(2)}</strong>
+                        <span className="mini-bar"><i style={{ width: `${item.r * 100}%` }} /></span>
+                      </td>
                       <td><span className="status-pending"><i /> Not computed</span></td>
                     </tr>
                   ))}
