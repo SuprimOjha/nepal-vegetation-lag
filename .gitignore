@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 @'
 # Dependencies
@@ -29,3 +30,29 @@ data/
 .DS_Store
 .vercel/
 '@ | Set-Content .gitignore
+=======
+@"
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+
+# Next.js
+.next/
+out/
+node_modules/
+.next/
+
+# Build files
+dist/
+build/
+
+# Local data
+data/
+*.tif
+*.tiff
+"@ | Add-Content .gitignore
+>>>>>>> 84e5a3a (Exclude virtual environment and local data)
