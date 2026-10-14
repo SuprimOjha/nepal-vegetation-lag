@@ -1,76 +1,203 @@
-"use client";
-
 import Link from "next/link";
-import { Leaf, ArrowRight, Compass, MapPin, ArrowLeft } from "lucide-react";
+import {
+  ArrowRight,
+  Mountain,
+  Waves,
+  Trees,
+  Snowflake,
+} from "lucide-react";
+import SiteShell from "../../components/SiteShell";
+
+const regions = [
+  {
+    number: "01",
+    title: "Terai and southern plains",
+    subtitle: "Lower-elevation environments",
+    icon: Waves,
+    description:
+      "The southern plains contain extensive agricultural landscapes, settlements, and river systems. Irrigation, crop calendars, flooding, and monsoon rainfall can all influence seasonal vegetation signals.",
+    questions: [
+      "How does vegetation greenness vary through the agricultural calendar?",
+      "Does the rainfall relationship differ between irrigated and rain-fed areas?",
+      "How do flood-prone areas differ from surrounding land?",
+    ],
+  },
+  {
+    number: "02",
+    title: "Middle hills",
+    subtitle: "Slopes, valleys, and terraces",
+    icon: Trees,
+    description:
+      "The middle hills contain varied elevations, aspects, forests, agricultural terraces, and settlement patterns. These differences can produce spatially heterogeneous rainfall and vegetation responses.",
+    questions: [
+      "Do vegetation responses differ by elevation or slope aspect?",
+      "How do forests and agricultural land differ in their seasonal patterns?",
+      "Are rainfall-response estimates consistent across neighboring areas?",
+    ],
+  },
+  {
+    number: "03",
+    title: "High Himalaya",
+    subtitle: "Alpine and high-mountain environments",
+    icon: Snowflake,
+    description:
+      "High-mountain landscapes include alpine vegetation, exposed rock, snow, ice, and strong seasonal constraints. Snow cover, cloud contamination, and sparse vegetation can complicate satellite-index interpretation.",
+    questions: [
+      "When are valid vegetation observations available?",
+      "How do snow and cloud contamination affect index quality?",
+      "Are there enough valid observations to estimate a meaningful lag?",
+    ],
+  },
+];
 
 export default function TopographyPage() {
   return (
-    <main style={{ minHeight: "100vh", background: "#f8fafc", color: "#1e293b", fontFamily: "sans-serif" }}>
-      {/* Navigation Bar */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 4rem", borderBottom: "1px solid #e2e8f0", background: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none", color: "inherit" }}>
-          <span style={{ background: "#1b4d3e", color: "#fff", padding: "8px", borderRadius: "8px", display: "flex" }}><Leaf size={22} /></span>
-          <span style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Eon<span style={{ color: "#2d7858" }}>Pulse</span> <span style={{ fontSize: "0.85rem", fontWeight: 600, background: "#e2efd9", color: "#18543e", padding: "2px 6px", borderRadius: "4px", marginLeft: "4px" }}>NEPAL</span></span>
-        </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-          <Link href="/contents/overview" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>About Study</Link>
-          <Link href="/contents/topography" style={{ textDecoration: "none", color: "#1b4d3e", fontWeight: 700, fontSize: "0.95rem" }}>Physiography</Link>
-          <Link href="/contents/methodology" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Methodology</Link>
-        </div>
-        <Link href="/research/nepal" style={{ background: "#1b4d3e", color: "#fff", padding: "0.6rem 1.25rem", borderRadius: "6px", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "0.95rem" }}>
-          Launch Laboratory <ArrowRight size={16} />
-        </Link>
-      </nav>
-
-      {/* Main Content */}
-      <div style={{ maxWidth: "900px", margin: "4rem auto", padding: "0 2rem" }}>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#64748b", textDecoration: "none", fontSize: "0.9rem", marginBottom: "2rem" }}>
-          <ArrowLeft size={16} /> Back to Home
-        </Link>
-
-        <div style={{ background: "#e2efd9", color: "#18543e", padding: "4px 14px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 600, display: "inline-block", marginBottom: "1rem" }}>
-          GEOGRAPHIC PROFILE
-        </div>
-
-        <h1 style={{ fontSize: "2.75rem", fontWeight: 800, color: "#0f172a", marginBottom: "1.5rem" }}>
-          Nepal's Physiographic Zones
-        </h1>
-
-        <div style={{ background: "#fff", padding: "3rem", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-          <p style={{ color: "#475569", lineHeight: 1.8, fontSize: "1.05rem", marginBottom: "2rem" }}>
-            Nepal exhibits an extraordinary altitudinal gradient, rising from roughly 60 meters above sea level in the southern plains to 8,848 meters at the summit of Mount Everest within a distance of under 200 kilometers. This extreme variation subdivides the region into distinct physiographic belts:
+    <SiteShell>
+      <section className="ep-page-hero">
+        <div className="ep-container">
+          <div className="ep-eyebrow">02 / Physiographic context</div>
+          <h1>
+            One country.
+            <br />
+            <em>Remarkably different</em> landscapes.
+          </h1>
+          <p>
+            Nepal&apos;s sharp elevation gradients create contrasting
+            climates, vegetation types, land uses, and observation
+            conditions. Understanding these differences is essential before
+            comparing rainfall-response patterns.
           </p>
+        </div>
+      </section>
 
-          <div style={{ display: "grid", gap: "1.5rem" }}>
-            <div style={{ padding: "1.5rem", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1b4d3e", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <MapPin size={18} /> 1. The Terai Plains (&lt; 300m)
-              </h3>
-              <p style={{ color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Characterized by alluvial soils, intensive agriculture, and sub-tropical forest ecosystems. Response lags here are typically short (0 to 1 month) due to rapid groundwater recharge and warm temperatures.
-              </p>
-            </div>
+      <section className="ep-section">
+        <div className="ep-container">
+          <div className="ep-section-heading">
+            <h2>Three broad environmental settings</h2>
+            <p>
+              These regions are a starting point for interpretation, not a
+              substitute for a validated geographic classification.
+            </p>
+          </div>
 
-            <div style={{ padding: "1.5rem", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1b4d3e", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <MapPin size={18} /> 2. Siwalik & Middle Hills (300m – 3,000m)
-              </h3>
-              <p style={{ color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Comprising terraced agriculture, chir pine, and broadleaf deciduous forests. Complex slope aspects and soil storage capacities yield a moderate response lag of 1 to 2 months.
-              </p>
-            </div>
+          <div className="ep-two-col">
+            {regions.map((region) => {
+              const Icon = region.icon;
 
-            <div style={{ padding: "1.5rem", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1b4d3e", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <MapPin size={18} /> 3. High Mountains & Himalayas (&gt; 3,000m)
-              </h3>
-              <p style={{ color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Dominated by alpine meadows, coniferous forests, and snowfields. Growth is thermally limited, causing delayed responses (2+ months) where snowmelt runoff dictates soil moisture availability.
-              </p>
-            </div>
+              return (
+                <article className="ep-zone-card" key={region.number}>
+                  <div className="ep-zone-number">
+                    REGION {region.number}
+                  </div>
+
+                  <div
+                    className="ep-card-icon"
+                    style={{ marginTop: 15 }}
+                  >
+                    <Icon size={23} />
+                  </div>
+
+                  <h3>{region.title}</h3>
+                  <p
+                    style={{
+                      marginBottom: 12,
+                      color: "#245c43",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {region.subtitle}
+                  </p>
+                  <p>{region.description}</p>
+
+                  <h3 style={{ fontSize: 14, marginTop: 22 }}>
+                    Questions to investigate
+                  </h3>
+                  <ul
+                    style={{
+                      paddingLeft: 19,
+                      color: "#65736b",
+                      fontSize: 13,
+                      lineHeight: 1.8,
+                    }}
+                  >
+                    {region.questions.map((question) => (
+                      <li key={question} style={{ marginBottom: 7 }}>
+                        {question}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
           </div>
         </div>
-      </div>
-    </main>
+      </section>
+
+      <section className="ep-section ep-section-white">
+        <div className="ep-container ep-prose">
+          <h2>How terrain enters the analysis</h2>
+          <p>
+            A map of elevation alone does not explain vegetation response.
+            Terrain is useful when combined with observations of rainfall,
+            vegetation, land cover, and data quality.
+          </p>
+
+          <h3>1. Elevation and temperature</h3>
+          <p>
+            Elevation is associated with temperature and growing-season
+            differences. If the analysis compares elevation zones, it should
+            use a documented digital elevation model and a defined
+            classification rule.
+          </p>
+
+          <h3>2. Land cover and human activity</h3>
+          <p>
+            Croplands, forests, grasslands, and sparsely vegetated
+            environments can have different seasonal patterns. Irrigation,
+            planting, harvesting, and land-cover change may also affect
+            rainfall-to-vegetation relationships.
+          </p>
+
+          <h3>3. Satellite observation quality</h3>
+          <p>
+            Clouds, snow, terrain shadows, mixed pixels, and missing
+            observations can reduce the reliability of vegetation indices.
+            The application should show where the data are insufficient
+            instead of displaying misleading lag estimates.
+          </p>
+
+          <div className="ep-callout">
+            <p>
+              <strong>Geographic accuracy:</strong> the study-area bounding
+              box is useful for filtering data, but it includes some
+              neighboring territory outside Nepal. Use a validated Nepal
+              country-boundary polygon to clip raster data when the analysis
+              requires the national boundary.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="ep-section">
+        <div className="ep-container">
+          <div className="ep-band">
+            <div className="ep-eyebrow" style={{ color: "#d7edb7" }}>
+              From landscape to evidence
+            </div>
+            <h2>Make every regional comparison reproducible.</h2>
+            <p>
+              Define geographic masks, document the datasets, and apply
+              consistent analysis settings before comparing regions.
+            </p>
+            <Link
+              href="/contents/methodology"
+              className="ep-button"
+            >
+              Explore the methodology <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </SiteShell>
   );
 }
