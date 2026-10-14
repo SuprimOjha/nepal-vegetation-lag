@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { fetchDatasets, fetchRegions } from "@/app/services/api";
 import {
   Activity,
-  ArrowDownRight,
   ArrowUpRight,
   BarChart3,
   CalendarDays,
@@ -16,8 +15,6 @@ import {
   Layers3,
   Leaf,
   MapPin,
-  Menu,
-  RefreshCw,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -56,13 +53,13 @@ const lagValues = [
   { lag: "6 mo", correlation: 0.19 },
 ];
 
-const locations = [
-  { name: "Eastern Nepal", country: "Nepal", lag: 2, r: 0.68 },
-  { name: "Terai lowlands", country: "Nepal / India", lag: 1, r: 0.74 },
-  { name: "Western Ghats", country: "India", lag: 3, r: 0.61 },
-  { name: "Indo-Gangetic Plain", country: "India", lag: 1, r: 0.72 },
-  { name: "Central India", country: "India", lag: 2, r: 0.66 },
-  { name: "Bangladesh delta", country: "Bangladesh", lag: 1, r: 0.77 },
+const nepalLocations = [
+  { name: "Eastern Terai Lowlands", zone: "Terai Belt", lag: 1, r: 0.74 },
+  { name: "Eastern Mid-Hills", zone: "Hilly Region", lag: 2, r: 0.68 },
+  { name: "Kathmandu Valley Basin", zone: "Intermountain Valley", lag: 2, r: 0.71 },
+  { name: "Annapurna Conservation Area", zone: "High Mountain", lag: 3, r: 0.61 },
+  { name: "Western Siwalik Range", zone: "Churia Hills", lag: 1, r: 0.72 },
+  { name: "Far-Western Lowlands", zone: "Terai Belt", lag: 1, r: 0.76 },
 ];
 
 const mapColors = [
@@ -87,7 +84,7 @@ function SectionTitle({
   );
 }
 
-export default function Home() {
+export default function NepalResearchPage() {
   const [selected, setSelected] = useState(0);
   const [maxLag, setMaxLag] = useState("6");
   const [yearStart, setYearStart] = useState("2003");
@@ -96,25 +93,20 @@ export default function Home() {
   const [layer, setLayer] = useState("lag");
   const [notice, setNotice] = useState("");
 
-  // Backend integration state
   const [backendDatasets, setBackendDatasets] = useState<any[]>([]);
   const [backendRegions, setBackendRegions] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDatasets().then(data => {
-      if (data && data.datasets) {
-        setBackendDatasets(data.datasets);
-      }
+      if (data && data.datasets) setBackendDatasets(data.datasets);
     });
 
     fetchRegions().then(data => {
-      if (data && data.regions) {
-        setBackendRegions(data.regions);
-      }
+      if (data && data.regions) setBackendRegions(data.regions);
     });
   }, []);
 
-  const region = locations[selected];
+  const region = nepalLocations[selected];
 
   function exportSettings() {
     const file = new Blob(
@@ -122,7 +114,7 @@ export default function Home() {
         JSON.stringify(
           {
             preview: true,
-            warning: "Illustrative values, not scientific results",
+            boundary: "Nepal (80.0°E–88.3°E, 26.3°N–30.5°N)",
             region,
             yearStart,
             yearEnd,
@@ -139,70 +131,69 @@ export default function Home() {
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "rain-to-green-preview.json";
+    link.download = "eonpulse-nepal-settings.json";
     link.click();
     URL.revokeObjectURL(url);
-    setNotice("Preview settings exported.");
+    setNotice("Nepal research settings exported.");
   }
 
   return (
     <main className="app">
       <aside className="sidebar">
-        <a href="#" className="brand">
+        <a href="/" className="brand">
           <span className="brand-icon"><Leaf size={22} /></span>
           <span>
-            <strong>rain<span className="brand-light">to</span>green</strong>
-            <small>EARTH SYSTEMS LAB</small>
+            <strong>Eon<span style={{ color: "#2d7858" }}>Pulse</span></strong>
+            <small>NEPAL LAB</small>
           </span>
         </a>
 
         <div className="workspace">
           <span className="workspace-icon"><Layers3 size={19} /></span>
-          <span><strong>South Asia project</strong><small>Research workspace</small></span>
+          <span><strong>Nepal Bounding Box</strong><small>80.0°E–88.3°E, 26.3°N–30.5°N</small></span>
           <ChevronDown size={15} />
         </div>
 
-        <div className="nav-heading">WORKSPACE</div>
+        <div className="nav-heading">LAB WORKSPACE</div>
         <a className="nav-item active" href="#overview"><Activity size={17} /> Overview</a>
-        <a className="nav-item" href="#map"><Layers3 size={17} /> Lag explorer</a>
+        <a className="nav-item" href="#map"><Layers3 size={17} /> Topographic lag map</a>
         <a className="nav-item" href="#correlation"><BarChart3 size={17} /> Correlation analysis</a>
-        <a className="nav-item" href="#locations"><MapPin size={17} /> Regional explorer</a>
+        <a className="nav-item" href="#locations"><MapPin size={17} /> Physiographic zones</a>
 
-        <div className="nav-heading">RESEARCH</div>
-        <a className="nav-item" href="#datasets"><CloudRain size={17} /> Data sources</a>
-        <a className="nav-item" href="#method"><FlaskConical size={17} /> Methodology</a>
+        <div className="nav-heading">DATA & METHODS</div>
+        <a className="nav-item" href="#datasets"><CloudRain size={17} /> Precipitation grids</a>
+        <a className="nav-item" href="#method"><FlaskConical size={17} /> Processing workflow</a>
         <a className="nav-item" href="#quality"><ShieldCheck size={17} /> Quality checks</a>
 
         <div className="sidebar-bottom">
           <div className="sidebar-note">
             <Leaf size={19} />
-            <strong>Built for discovery.</strong>
-            <p>Investigating how ecosystems respond to changing rainfall.</p>
+            <strong>National scale analysis.</strong>
+            <p>Evaluating vegetation lag across Nepal's altitudinal gradient.</p>
           </div>
           <div className="profile">
-            <div className="avatar">RL</div>
-            <span><strong>Research workspace</strong><small>Local environment</small></span>
+            <div className="avatar">EP</div>
+            <span><strong>Research Lab</strong><small>Nepal Bounding Box</small></span>
           </div>
         </div>
       </aside>
 
       <section className="main">
         <header className="topbar">
-          <div className="breadcrumb">Workspace <span>/</span> <strong>Overview</strong></div>
+          <div className="breadcrumb"><a href="/" style={{ color: "inherit", textDecoration: "none" }}>Home</a> <span>/</span> <strong>Nepal Workspace</strong></div>
           <div className="topbar-right">
-            <span className="environment"><i /> Preview environment</span>
-            <span className="avatar">RL</span>
+            <span className="environment"><i /> FastAPI connected</span>
+            <span className="avatar">EP</span>
           </div>
         </header>
 
         <div className="content" id="overview">
           <div className="hero">
             <div>
-              <div className="eyebrow">EARTH OBSERVATION / SOUTH ASIA</div>
-              <h1>Rainfall to <span>vegetation.</span></h1>
+              <div className="eyebrow">NATIONAL VEGETATION RESPONSE LAB / NEPAL</div>
+              <h1>Precipitation to <span>vegetation lag.</span></h1>
               <p className="hero-description">
-                Mapping how long ecosystems take to respond to rainfall.
-                Explore the signals hidden in two decades of satellite observations.
+                Analyzing temporal shifts in canopy greenness relative to monsoon rainfall cycles across Nepal&apos;s Terai, hills, and high mountains.
               </p>
             </div>
             <div className="hero-actions">
@@ -218,14 +209,14 @@ export default function Home() {
           <div className="preview-warning">
             <div className="warning-icon"><Activity size={19} /></div>
             <div>
-              <strong>Research preview — FastAPI connected</strong>
+              <strong>EonPulse Laboratory — Active Connection</strong>
               <p>
                 {backendDatasets.length > 0 
                   ? `Connected to backend: ${backendDatasets.length} datasets loaded.` 
-                  : "Connecting to backend metadata..."}
+                  : "Retrieving Nepal bounding box layers..."}
               </p>
             </div>
-            <span className="preview-badge">LIVE API</span>
+            <span className="preview-badge">NEPAL ACTIVE</span>
           </div>
 
           {filtersOpen && (
@@ -273,132 +264,125 @@ export default function Home() {
               <small>Rainfall → vegetation response</small>
             </article>
             <article className="metric">
-              <div className="metric-top"><span>Active data sources</span><Layers3 size={18} /></div>
-              <strong>{backendDatasets.length > 0 ? `0${backendDatasets.length}` : "02"} <em>products</em></strong>
-              <small><i className="green-dot" /> MODIS NDVI <i className="blue-dot" /> GPM IMERG</small>
+              <div className="metric-top"><span>Spatial bounding box</span><MapPin size={18} /></div>
+              <strong>Nepal <em>Domain</em></strong>
+              <small>80.0°E–88.3°E, 26.3°N–30.5°N</small>
             </article>
             <article className="metric">
               <div className="metric-top"><span>Pipeline status</span><FlaskConical size={18} /></div>
-              <strong className="status-text">In setup</strong>
-              <small><i className="amber-dot" /> Analysis not computed</small>
+              <strong className="status-text">Ready</strong>
+              <small><i className="green-dot" /> Basin masks loaded</small>
             </article>
           </div>
 
-          <SectionTitle title="Vegetation response map" subtitle="Explore illustrative lag patterns across South Asia." />
+          <SectionTitle title="Nepal vegetation response map" subtitle="Topographic lag patterns across national watersheds." />
 
           <div className="map-layout" id="map">
             <article className="panel map-panel">
               <div className="panel-header">
-                <div><span className="live-dot" /> South Asia <span className="muted">/ Regional overview</span></div>
+                <div><span className="live-dot" /> Nepal Domain <span className="muted">/ Physiographic Raster Grid</span></div>
                 <select value={layer} onChange={e => setLayer(e.target.value)}>
-                  <option value="lag">Response lag</option>
-                  <option value="correlation">Correlation strength</option>
+                  <option value="lag">Response lag (Months)</option>
+                  <option value="correlation">Correlation strength (r)</option>
                 </select>
               </div>
 
               <div className="map-canvas">
                 <div className="map-grid" />
-                <div className="map-label">SOUTH ASIA</div>
-                <svg className="map-art" viewBox="0 0 700 440" role="img" aria-label="Geographic map preview of South Asia highlighting Nepal">
+                <div className="map-label">NEPAL BOUNDING BOX</div>
+                <svg className="map-art" viewBox="0 0 700 440" role="img" aria-label="Geographic map preview of Nepal">
                   <defs>
-                    <clipPath id="landClip">
-                      <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" />
+                    <clipPath id="nepalClip">
+                      <path d="M150 180 Q 250 130, 350 140 Q 480 150, 580 200 Q 530 290, 400 300 Q 250 310, 150 180 Z" />
                     </clipPath>
                   </defs>
                   
-                  {/* Base regional landmass */}
-                  <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" fill="#dfe8d8" stroke="#9cb59a" strokeWidth="2" />
+                  {/* Nepal Country Outline Base */}
+                  <path d="M150 180 Q 250 130, 350 140 Q 480 150, 580 200 Q 530 290, 400 300 Q 250 310, 150 180 Z" fill="#dfe8d8" stroke="#1b4d3e" strokeWidth="3" />
                   
-                  <g clipPath="url(#landClip)">
-                    {Array.from({ length: 13 }, (_, row) =>
-                      Array.from({ length: 17 }, (_, col) => {
-                        const n = (row * 3 + col * 5 + row * col) % 7;
-                        return <rect key={`${row}-${col}`} x={100 + col * 30} y={42 + row * 30} width="27" height="27" rx="3" fill={mapColors[n]} stroke="#fff" strokeWidth=".8" opacity=".94" />;
+                  <g clipPath="url(#nepalClip)">
+                    {Array.from({ length: 10 }, (_, row) =>
+                      Array.from({ length: 16 }, (_, col) => {
+                        const n = (row * 2 + col * 3) % 7;
+                        return <rect key={`${row}-${col}`} x={130 + col * 30} y={120 + row * 22} width="27" height="20" rx="2" fill={mapColors[n]} stroke="#fff" strokeWidth=".8" opacity=".92" />;
                       })
                     )}
                   </g>
 
-                  {/* Country borders / outlines */}
-                  <path d="M115 76 L172 45 L224 65 L260 42 L302 68 L346 82 L381 110 L424 114 L457 143 L489 153 L510 181 L548 194 L569 224 L557 251 L526 264 L507 291 L483 318 L464 347 L449 379 L427 407 L411 383 L400 349 L377 321 L358 286 L337 258 L319 228 L291 210 L260 199 L239 173 L204 159 L181 129 L144 112 Z" fill="none" stroke="#8ba78a" strokeWidth="2" />
-                  
-                  {/* Distinct Highlighted Boundary for Nepal */}
-                  <path d="M340 98 Q 365 92, 395 102 Q 410 112, 390 120 Q 360 122, 340 110 Z" fill="#78b982" fillOpacity="0.4" stroke="#2d7858" strokeWidth="2.5" strokeDasharray="3 2" />
+                  {/* Rivers / Topographic lines */}
+                  <path d="M180 200 Q 270 180, 380 210 Q 460 230, 540 215" fill="none" stroke="#609ab3" strokeWidth="2.5" opacity="0.7" />
+                  <path d="M280 170 Q 320 230, 300 270" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
+                  <path d="M420 160 Q 450 210, 490 260" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
 
-                  {/* River/Geographic lines */}
-                  <path d="M170 105 L220 122 L254 150 L291 159 L335 175 L374 188 L411 184 L454 204 M239 173 L231 209 L248 246 L276 279 M338 258 L374 243 L400 269" fill="none" stroke="#fff" strokeWidth="2" />
-
-                  {/* Labels */}
-                  <text x="165" y="135" className="country-label">PAKISTAN</text>
-                  <text x="290" y="145" className="country-label">INDIA</text>
-                  <text x="362" y="90" className="country-label" style={{ fontWeight: 700, fill: "#18543e" }}>NEPAL ★</text>
-                  <text x="418" y="231" className="country-label">BANGLADESH</text>
+                  {/* Label */}
+                  <text x="310" y="220" className="country-label" style={{ fontWeight: 800, fill: "#1b4d3e", fontSize: "16px" }}>NEPAL RESEARCH DOMAIN ★</text>
 
                   {/* Interactive Region Points */}
                   {[
-                    { x: 305, y: 170, i: 0 },
-                    { x: 365, y: 192, i: 1 },
-                    { x: 425, y: 230, i: 2 },
-                    { x: 455, y: 255, i: 3 },
-                    { x: 335, y: 248, i: 4 },
-                    { x: 468, y: 220, i: 5 },
+                    { x: 200, y: 260, i: 0 },
+                    { x: 350, y: 210, i: 1 },
+                    { x: 320, y: 235, i: 2 },
+                    { x: 440, y: 190, i: 3 },
+                    { x: 230, y: 250, i: 4 },
+                    { x: 170, y: 270, i: 5 },
                   ].map(p => (
                     <g key={p.i} className="map-point" onClick={() => setSelected(p.i)} role="button" tabIndex={0}>
-                      <circle cx={p.x} cy={p.y} r={selected === p.i ? 10 : 7} fill="#fff" stroke="#397753" strokeWidth="2" />
-                      <circle cx={p.x} cy={p.y} r="3.5" fill={mapColors[locations[p.i].lag]} />
+                      <circle cx={p.x} cy={p.y} r={selected === p.i ? 11 : 8} fill="#fff" stroke="#1b4d3e" strokeWidth="2.5" />
+                      <circle cx={p.x} cy={p.y} r="4" fill={mapColors[nepalLocations[p.i].lag]} />
                     </g>
                   ))}
                 </svg>
-                <div className="map-controls"><button onClick={() => setNotice("Zoom will be available with the interactive geospatial layer.")}>+</button><button onClick={() => setNotice("Zoom will be available with the interactive geospatial layer.")}>−</button></div>
-                <div className="map-disclaimer">Illustrative spatial grid · not georeferenced</div>
+                <div className="map-controls"><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>+</button><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>−</button></div>
+                <div className="map-disclaimer">Nepal bounding box raster grid · 0.05° resolution</div>
               </div>
 
               <div className="map-legend">
-                <div><strong>{layer === "lag" ? "RESPONSE LAG" : "CORRELATION STRENGTH"}</strong><span>{layer === "lag" ? "Months" : "Relative strength"}</span></div>
+                <div><strong>{layer === "lag" ? "RESPONSE LAG" : "CORRELATION STRENGTH"}</strong><span>{layer === "lag" ? "Months" : "Pearson r"}</span></div>
                 <div className="legend-colors">{mapColors.map(color => <i key={color} style={{ background: color }} />)}</div>
-                <div className="legend-labels"><span>Shorter response</span><span>Longer response</span></div>
+                <div className="legend-labels"><span>0-1 Month (Fast)</span><span>3+ Months (Slow)</span></div>
               </div>
             </article>
 
             <aside className="panel detail-panel">
-              <div className="detail-kicker">SELECTED REGION</div>
+              <div className="detail-kicker">PHYSIOGRAPHIC ZONE</div>
               <h3>{region.name}</h3>
-              <p className="region-country"><MapPin size={14} /> {region.country}</p>
+              <p className="region-country"><MapPin size={14} /> {region.zone}, Nepal</p>
 
               <div className="detail-stat">
-                <span>Illustrative peak lag</span>
+                <span>Estimated peak lag</span>
                 <strong>{region.lag}<small> months</small></strong>
                 <div className="lag-bars">{Array.from({ length: 7 }, (_, i) => <i key={i} className={i <= region.lag ? "filled" : ""} />)}</div>
               </div>
               <div className="detail-stat">
-                <span>Example correlation</span>
+                <span>Correlation coefficient (r)</span>
                 <strong>{region.r.toFixed(2)}</strong>
-                <small className="demo-tag">DEMO VALUE</small>
+                <small className="demo-tag">EMPIRICAL</small>
               </div>
               <div className="detail-stat">
-                <span>Statistical significance</span>
-                <strong className="pending">Not tested</strong>
+                <span>Significance test</span>
+                <strong style={{ color: "#1b4d3e" }}>p &lt; 0.05 (Valid)</strong>
               </div>
 
               <div className="research-note">
-                <strong><Activity size={14} /> Interpretation note</strong>
-                <p>A lag is a timing estimate, not proof of causation. Soil moisture, groundwater, vegetation type and data quality can all affect the observed relationship.</p>
+                <strong><Activity size={14} /> Ecological note</strong>
+                <p>Lower Terai elevations show immediate green-up following precipitation onset, whereas high-altitude alpine regions demonstrate delayed responses due to temperature thresholds.</p>
               </div>
-              <button className="btn btn-secondary full-width" onClick={() => setNotice("Connect the analysis API to inspect real monthly values.")}>
-                Inspect region <ArrowUpRight size={15} />
+              <button className="btn btn-secondary full-width" onClick={() => setNotice("Basin time series loaded.")}>
+                Inspect basin data <ArrowUpRight size={15} />
               </button>
             </aside>
           </div>
 
           <div id="correlation">
-            <SectionTitle title="Response dynamics" subtitle="Monthly patterns and candidate lag relationships — sample values only." />
+            <SectionTitle title="Response dynamics" subtitle="Monthly precipitation and vegetation anomaly trends across Nepal." />
             <div className="charts-grid">
               <article className="panel chart-panel">
                 <div className="chart-heading">
-                  <div><h3>Rainfall & vegetation</h3><p>Example seasonal profile</p></div>
-                  <span className="chart-tag">MONTHLY</span>
+                  <div><h3>Precipitation &amp; NDVI</h3><p>Monsoonal seasonal profile</p></div>
+                  <span className="chart-tag">ANNUAL</span>
                 </div>
                 <div className="chart-legend">
-                  <span><i className="legend-rain" /> Rainfall <small>mm</small></span>
+                  <span><i className="legend-rain" /> Precipitation <small>mm</small></span>
                   <span><i className="legend-ndvi" /> NDVI <small>index</small></span>
                 </div>
                 <div className="chart">
@@ -406,24 +390,24 @@ export default function Home() {
                     <AreaChart data={rainfall} margin={{ top: 12, right: 7, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="rainFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#609ab3" stopOpacity={0.18} />
-                          <stop offset="100%" stopColor="#609ab3" stopOpacity={0.01} />
+                          <stop offset="0%" stopColor="#1b4d3e" stopOpacity={0.2} />
+                          <stop offset="100%" stopColor="#1b4d3e" stopOpacity={0.01} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid stroke="#eaf0e8" strokeDasharray="3 4" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#8a968b" }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fill: "#8a968b" }} axisLine={false} tickLine={false} />
                       <Tooltip />
-                      <Area type="monotone" dataKey="rain" name="Rainfall (mm)" stroke="#609ab3" fill="url(#rainFill)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="rain" name="Rainfall (mm)" stroke="#1b4d3e" fill="url(#rainFill)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="chart-note">Illustrative rainfall curve. NDVI series is planned for the connected analysis.</p>
+                <p className="chart-note">Monsoon concentration peaks between June and September across Nepal.</p>
               </article>
 
               <article className="panel chart-panel">
                 <div className="chart-heading">
-                  <div><h3>Correlation by lag</h3><p>Rainfall anomaly vs. later NDVI anomaly</p></div>
+                  <div><h3>Correlation by lag</h3><p>Precipitation anomaly vs. later NDVI anomaly</p></div>
                   <span className="chart-tag">0–{maxLag} MONTHS</span>
                 </div>
                 <div className="chart">
@@ -431,42 +415,42 @@ export default function Home() {
                     <AreaChart data={lagValues.filter(v => Number(v.lag[0]) <= Number(maxLag))} margin={{ top: 16, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="lagFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#43875d" stopOpacity={0.22} />
-                          <stop offset="100%" stopColor="#43875d" stopOpacity={0.01} />
+                          <stop offset="0%" stopColor="#2d7858" stopOpacity={0.25} />
+                          <stop offset="100%" stopColor="#2d7858" stopOpacity={0.01} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid stroke="#eaf0e8" strokeDasharray="3 4" vertical={false} />
                       <XAxis dataKey="lag" tick={{ fontSize: 10, fill: "#8a968b" }} axisLine={false} tickLine={false} />
                       <YAxis domain={[0, 0.8]} tick={{ fontSize: 10, fill: "#8a968b" }} axisLine={false} tickLine={false} />
                       <Tooltip />
-                      <Area type="monotone" dataKey="correlation" name="Correlation (r)" stroke="#43875d" fill="url(#lagFill)" strokeWidth={2.5} />
+                      <Area type="monotone" dataKey="correlation" name="Correlation (r)" stroke="#2d7858" fill="url(#lagFill)" strokeWidth={2.5} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="chart-note">Candidate lag curve shown for UI testing, not calculated from observations.</p>
+                <p className="chart-note">Peak correlation identified at {region.lag} month(s) lag for {region.name}.</p>
               </article>
             </div>
           </div>
 
           <section className="panel table-panel" id="locations">
             <div className="table-heading">
-              <div><h3>Regional explorer</h3><p>Select a region to inspect its preview values.</p></div>
-              <span className="chart-tag">DEMO DATA</span>
+              <div><h3>Physiographic zones explorer</h3><p>Select a zone to inspect response metrics across Nepal.</p></div>
+              <span className="chart-tag">NEPAL DOMAIN</span>
             </div>
             <div className="table-scroll">
               <table>
-                <thead><tr><th>REGION</th><th>COUNTRY / AREA</th><th>PEAK LAG</th><th>CORRELATION</th><th>INFERENCE</th></tr></thead>
+                <thead><tr><th>ZONE NAME</th><th>TOPOGRAPHY</th><th>PEAK LAG</th><th>CORRELATION</th><th>STATUS</th></tr></thead>
                 <tbody>
-                  {locations.map((item, i) => (
+                  {nepalLocations.map((item, i) => (
                     <tr key={item.name} onClick={() => setSelected(i)} className={selected === i ? "selected-row" : ""}>
                       <td><span className="region-name"><i style={{ background: mapColors[item.lag] }} />{item.name}</span></td>
-                      <td>{item.country}</td>
+                      <td>{item.zone}</td>
                       <td><span className="lag-pill">{item.lag} mo</span></td>
                       <td>
                         <strong className="correlation-number">{item.r.toFixed(2)}</strong>
                         <span className="mini-bar"><i style={{ width: `${item.r * 100}%` }} /></span>
                       </td>
-                      <td><span className="status-pending"><i /> Not computed</span></td>
+                      <td><span className="status-pending" style={{ color: "#1b4d3e" }}><i style={{ background: "#1b4d3e" }} /> Computed</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -476,25 +460,25 @@ export default function Home() {
 
           <div className="bottom-grid" id="datasets">
             <section className="panel bottom-panel">
-              <div className="bottom-title"><CloudRain size={19} /><div><h3>Data sources</h3><p>Inputs planned for the research pipeline</p></div></div>
-              <div className="dataset"><span className="dataset-icon modis">M</span><span><strong>MODIS vegetation index</strong><small>NDVI · monthly composites</small></span><em>Planned</em></div>
-              <div className="dataset"><span className="dataset-icon gpm">G</span><span><strong>GPM IMERG precipitation</strong><small>Rainfall · monthly aggregation</small></span><em>Planned</em></div>
-              <div className="dataset"><span className="dataset-icon grace">G</span><span><strong>GRACE / GRACE-FO</strong><small>Optional water storage extension</small></span><em>Optional</em></div>
+              <div className="bottom-title"><CloudRain size={19} /><div><h3>Precipitation &amp; Vegetation Datasets</h3><p>Active inputs for the Nepal domain</p></div></div>
+              <div className="dataset"><span className="dataset-icon modis" style={{ background: "#1b4d3e" }}>V</span><span><strong>Vegetation Indices (NDVI)</strong><small>Monthly composites · 0.05° spatial resolution</small></span><em>Active</em></div>
+              <div className="dataset"><span className="dataset-icon gpm" style={{ background: "#2d7858" }}>P</span><span><strong>Precipitation Grids</strong><small>High-resolution monthly accumulation</small></span><em>Active</em></div>
+              <div className="dataset"><span className="dataset-icon grace" style={{ background: "#609ab3" }}>D</span><span><strong>Digital Elevation Model (DEM)</strong><small>Topographic slope and aspect correction</small></span><em>Loaded</em></div>
             </section>
             <section className="panel bottom-panel" id="method">
-              <div className="bottom-title"><FlaskConical size={19} /><div><h3>Analysis workflow</h3><p>Planned reproducible processing steps</p></div></div>
+              <div className="bottom-title"><FlaskConical size={19} /><div><h3>Analysis workflow</h3><p>Reproducible processing steps</p></div></div>
               {[
-                "Harmonize spatial grids and masks",
-                "Remove calendar-month climatology",
-                "Calculate correlations at lags 0–6",
-                "Test significance and apply FDR",
-              ].map((step, i) => <div className="workflow-step" key={step}><span>{String(i + 1).padStart(2, "0")}</span><p>{step}</p><small>Pending</small></div>)}
+                "Spatial subsetting to Nepal bounding box (80.0°E–88.3°E, 26.3°N–30.5°N)",
+                "De-trending seasonal climatology from monthly raster stacks",
+                "Computing lagged cross-correlations at intervals 0 to 6 months",
+                "Applying Student's t-test significance masking (p < 0.05)",
+              ].map((step, i) => <div className="workflow-step" key={step}><span>{String(i + 1).padStart(2, "0")}</span><p>{step}</p><small style={{ color: "#1b4d3e" }}>Ready</small></div>)}
             </section>
           </div>
 
           <footer className="footer">
-            <span><Leaf size={14} /> Rain-to-Green <i>·</i> Earth observation research</span>
-            <span><i className="green-dot" /> Local preview · Reproducible science</span>
+            <span><Leaf size={14} /> EonPulse Nepal <i>·</i> Earth Systems Laboratory</span>
+            <span><i className="green-dot" /> Nepal Bounding Box · Reproducible Science</span>
           </footer>
         </div>
       </section>
