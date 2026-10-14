@@ -1,43 +1,25 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.endpoints import router as api_router
 
 app = FastAPI(
     title="Rain-to-Green API",
-    description="South Asia rainfall and vegetation response analysis",
-    version="0.1.0",
+    description="Backend API for South Asia Vegetation Response to Rainfall (Nepal Focus)",
+    version="1.0.0"
 )
 
+# Enable CORS for local Next.js frontend development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-def root():
-    return {
-        "project": "Rain-to-Green",
-        "status": "running",
-        "docs": "/docs",
-    }
-
+# Include API router
+app.include_router(api_router, prefix="/api")
 
 @app.get("/api/health")
-def health():
-    return {"status": "healthy"}
-
-
-@app.get("/api/analysis/config")
-def analysis_config():
-    return {
-        "region": "South Asia",
-        "start_year": 2003,
-        "end_year": 2024,
-        "max_lag_months": 6,
-        "datasets": ["MODIS NDVI", "GPM IMERG rainfall"],
-        "status": "analysis_not_started",
-    }
+def health_check():
+    return {"status": "healthy", "message": "Rain-to-Green backend is running successfully!"}
