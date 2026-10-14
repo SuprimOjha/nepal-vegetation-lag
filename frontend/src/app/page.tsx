@@ -17,9 +17,9 @@ export default function HomePage() {
         {/* Navigation Links */}
         <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           <Link href="/research/nepal" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Workspace</Link>
-          <a href="#overview" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>About Study</a>
-          <a href="#topography" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Physiography</a>
-          <a href="#methodology" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Methodology</a>
+          <a href="contents/overview" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>About Study</a>
+          <a href="contents/topography" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Physiography</a>
+          <a href="contents/methodology" style={{ textDecoration: "none", color: "#334155", fontWeight: 500, fontSize: "0.95rem" }}>Methodology</a>
         </div>
 
         {/* Action Button */}
