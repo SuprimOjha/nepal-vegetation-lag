@@ -1,0 +1,19 @@
+@"
+
+# Dependencies and generated files
+node_modules/
+.next/
+out/
+backend/.venv/
+__pycache__/
+*.py[cod]
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Satellite data
+*.tif
+*.tiff
+"@ | Add-Content .gitignore
