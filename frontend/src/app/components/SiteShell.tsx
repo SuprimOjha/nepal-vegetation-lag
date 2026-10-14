@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   Leaf,
   Menu,
-  Github,
 } from "lucide-react";
 import "../eonpulse.css";
 
