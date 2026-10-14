@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Rain-to-Green | South Asia Vegetation Lag Map",
+  title: "EonPulse | Nepal Vegetation Lag Map",
   description:
     "Explore how vegetation across South Asia responds to rainfall using satellite observations and climate data.",
 };
