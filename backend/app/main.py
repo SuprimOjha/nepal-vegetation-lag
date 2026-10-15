@@ -39,3 +39,8 @@ def get_regions():
 def get_nepal_analysis(max_lag: int = 6):
     result = process_nepal_lag_analysis(max_lag=max_lag)
     return result
+
+@app.get("/api/analysis/nepal")
+def get_nepal_analysis(zone: str = "all", max_lag: int = 6):
+    result = process_nepal_lag_analysis(zone_id=zone, max_lag=max_lag)
+    return result
