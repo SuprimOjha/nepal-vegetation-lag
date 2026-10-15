@@ -29,3 +29,6 @@ def get_regions():
             {"id": "terai", "name": "Terai Lowlands", "country": "Nepal", "default_lag_months": 1, "r": 0.74},
         ]
     }
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
