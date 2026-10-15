@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchDatasets, fetchRegions } from "@/app/services/api";
+import ApiStatus from "@/app/components/ApiStatus";
 import {
   Activity,
   ArrowUpRight,
@@ -169,7 +170,7 @@ export default function NepalResearchPage() {
           <div className="sidebar-note">
             <Leaf size={19} />
             <strong>National scale analysis.</strong>
-            <p>Evaluating vegetation lag across Nepal's altitudinal gradient.</p>
+            <p>Evaluating vegetation lag across Nepal&apos;s altitudinal gradient.</p>
           </div>
           <div className="profile">
             <div className="avatar">EP</div>
@@ -182,7 +183,7 @@ export default function NepalResearchPage() {
         <header className="topbar">
           <div className="breadcrumb"><a href="/" style={{ color: "inherit", textDecoration: "none" }}>Home</a> <span>/</span> <strong>Nepal Workspace</strong></div>
           <div className="topbar-right">
-            <span className="environment"><i /> FastAPI connected</span>
+            <ApiStatus />
             <span className="avatar">EP</span>
           </div>
         </header>
@@ -297,7 +298,6 @@ export default function NepalResearchPage() {
                     </clipPath>
                   </defs>
                   
-                  {/* Nepal Country Outline Base */}
                   <path d="M150 180 Q 250 130, 350 140 Q 480 150, 580 200 Q 530 290, 400 300 Q 250 310, 150 180 Z" fill="#dfe8d8" stroke="#1b4d3e" strokeWidth="3" />
                   
                   <g clipPath="url(#nepalClip)">
@@ -309,15 +309,12 @@ export default function NepalResearchPage() {
                     )}
                   </g>
 
-                  {/* Rivers / Topographic lines */}
                   <path d="M180 200 Q 270 180, 380 210 Q 460 230, 540 215" fill="none" stroke="#609ab3" strokeWidth="2.5" opacity="0.7" />
                   <path d="M280 170 Q 320 230, 300 270" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
                   <path d="M420 160 Q 450 210, 490 260" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
 
-                  {/* Label */}
                   <text x="310" y="220" className="country-label" style={{ fontWeight: 800, fill: "#1b4d3e", fontSize: "16px" }}>NEPAL RESEARCH DOMAIN ★</text>
 
-                  {/* Interactive Region Points */}
                   {[
                     { x: 200, y: 260, i: 0 },
                     { x: 350, y: 210, i: 1 },
