@@ -37,3 +37,17 @@ export async function fetchRegions() {
     };
   }
 }
+
+export async function fetchNepalAnalysis(maxLag: number = 6) {
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const res = await fetch(`${API_BASE_URL}/api/analysis/nepal?max_lag=${maxLag}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("Failed to fetch Nepal analysis");
+    return await res.json();
+  } catch (error) {
+    console.warn("FastAPI unreachable for analysis. Using fallback calculation.");
+    return null;
+  }
+}
