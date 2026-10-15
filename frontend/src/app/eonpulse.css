@@ -822,3 +822,28 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+.api-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid var(--ep-line);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.api-checking {
+  color: #806b36;
+  background: #faf4df;
+}
+
+.api-connected {
+  color: #216543;
+  background: #e4f3e8;
+}
+
+.api-disconnected {
+  color: #a33d3d;
+  background: #fbeaea;
+}
