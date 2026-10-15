@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from backend.services.processor import process_nepal_lag_analysis
 
 app = FastAPI(title="EonPulse Nepal API")
 
@@ -32,3 +33,9 @@ def get_regions():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/api/analysis/nepal")
+def get_nepal_analysis(max_lag: int = 6):
+    result = process_nepal_lag_analysis(max_lag=max_lag)
+    return result
