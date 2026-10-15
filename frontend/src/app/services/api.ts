@@ -2,11 +2,14 @@ const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export async function fetchDatasets() {
   try {
-    const res = await fetch(`${API_BASE_URL}/datasets`);
-    if (!res.ok) throw new Error("Failed to fetch datasets");
-    return await res.json();
+    const res = await fetch(`${API_BASE_URL}/datasets`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    return data;
   } catch (error) {
-    console.warn("FastAPI server offline or unreachable. Using fallback datasets.");
+    console.error("Detailed fetchDatasets error:", error);
     return {
       datasets: [
         { short_name: "MOD13A3", name: "MODIS Vegetation Indices", format: "HDF4" },
@@ -18,14 +21,18 @@ export async function fetchDatasets() {
 
 export async function fetchRegions() {
   try {
-    const res = await fetch(`${API_BASE_URL}/regions`);
-    if (!res.ok) throw new Error("Failed to fetch regions");
-    return await res.json();
+    const res = await fetch(`${API_BASE_URL}/regions`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    return data;
   } catch (error) {
-    console.warn("FastAPI server offline or unreachable. Using fallback regions.");
+    console.error("Detailed fetchRegions error:", error);
     return {
       regions: [
         { id: "nepal_east", name: "Eastern Nepal", country: "Nepal", default_lag_months: 2, r: 0.68 },
+        { id: "terai", name: "Terai Lowlands", country: "Nepal", default_lag_months: 1, r: 0.74 },
       ],
     };
   }
