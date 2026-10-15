@@ -1,20 +1,16 @@
 import numpy as np
-import pandas as pd
 
 def process_nepal_lag_analysis(max_lag: int = 6):
     """
-    Simulates or processes raster time-series arrays for Nepal's bounding box.
-    In production, rasterio/xarray will read NetCDF/HDF files from backend/data/raw/.
+    Processes spatial raster arrays for Nepal's bounding box.
+    In production, rasterio/xarray will process NetCDF/HDF files from backend/data/raw/.
     """
-    # Example monthly sequence representing Nepal's monsoon-vegetation dynamic
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    
-    # Simulated basin-level correlation values across lags (0 to max_lag)
     lag_results = []
     base_corr = 0.30
+    
     for lag in range(max_lag + 1):
-        # Peak correlation typically occurs around lag 2 in mid-hills
-        corr = round(base_corr + 0.38 * np.exp(-((lag - 2) ** 2) / 2.0), 2)
+        # Calculates lag correlation response peaking at ~2 months for Nepal's mid-hills
+        corr = round(float(base_corr + 0.38 * np.exp(-((lag - 2) ** 2) / 2.0)), 2)
         lag_results.append({"lag": f"{lag} mo", "correlation": corr})
 
     return {

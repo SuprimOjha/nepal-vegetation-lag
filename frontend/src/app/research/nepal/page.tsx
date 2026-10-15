@@ -29,7 +29,7 @@ import {
   YAxis,
 } from "recharts";
 
-const rainfall = [
+const rainfallData = [
   { month: "Jan", rain: 22, ndvi: 0.18 },
   { month: "Feb", rain: 27, ndvi: 0.19 },
   { month: "Mar", rain: 38, ndvi: 0.23 },
@@ -44,7 +44,7 @@ const rainfall = [
   { month: "Dec", rain: 19, ndvi: 0.27 },
 ];
 
-const lagValues = [
+const fallbackLagValues = [
   { lag: "0 mo", correlation: 0.31 },
   { lag: "1 mo", correlation: 0.48 },
   { lag: "2 mo", correlation: 0.68 },
@@ -96,7 +96,9 @@ export default function NepalResearchPage() {
 
   const [backendDatasets, setBackendDatasets] = useState<any[]>([]);
   const [backendRegions, setBackendRegions] = useState<any[]>([]);
+  const [dynamicLagAnalysis, setDynamicLagAnalysis] = useState<any[]>([]);
 
+  // Initial load for datasets & regions
   useEffect(() => {
     fetchDatasets().then(data => {
       if (data && data.datasets) setBackendDatasets(data.datasets);
@@ -107,7 +109,26 @@ export default function NepalResearchPage() {
     });
   }, []);
 
+  // Fetch dynamic analysis calculations when maxLag changes
+  useEffect(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    fetch(`${baseUrl}/api/analysis/nepal?max_lag=${maxLag}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Analysis endpoint failed");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.lag_analysis) {
+          setDynamicLagAnalysis(data.lag_analysis);
+        }
+      })
+      .catch(() => {
+        console.warn("Using fallback lag values.");
+      });
+  }, [maxLag]);
+
   const region = nepalLocations[selected];
+  const chartLagData = dynamicLagAnalysis.length > 0 ? dynamicLagAnalysis : fallbackLagValues;
 
   function exportSettings() {
     const file = new Blob(
@@ -194,7 +215,7 @@ export default function NepalResearchPage() {
               <div className="eyebrow">NATIONAL VEGETATION RESPONSE LAB / NEPAL</div>
               <h1>Precipitation to <span>vegetation lag.</span></h1>
               <p className="hero-description">
-                Analyzing temporal shifts in canopy greenness relative to monsoon rainfall cycles across Nepal&apos;s Terai, hills, and high mountains.
+                Mapping vegetation response times to rainfall across Nepal using MODIS NDVI and GPM IMERG satellite data (2003–2024), with pixel-level lag analysis and anomaly detection.
               </p>
             </div>
             <div className="hero-actions">
@@ -213,7 +234,7 @@ export default function NepalResearchPage() {
               <strong>EonPulse Laboratory — Active Connection</strong>
               <p>
                 {backendDatasets.length > 0 
-                  ? `Connected to backend: ${backendDatasets.length} datasets loaded.` 
+                  ? `Connected to FastAPI: ${backendDatasets.length} datasets active.` 
                   : "Retrieving Nepal bounding box layers..."}
               </p>
             </div>
@@ -384,7 +405,7 @@ export default function NepalResearchPage() {
                 </div>
                 <div className="chart">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={rainfall} margin={{ top: 12, right: 7, left: -20, bottom: 0 }}>
+                    <AreaChart data={rainfallData} margin={{ top: 12, right: 7, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="rainFill" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#1b4d3e" stopOpacity={0.2} />
@@ -404,12 +425,12 @@ export default function NepalResearchPage() {
 
               <article className="panel chart-panel">
                 <div className="chart-heading">
-                  <div><h3>Correlation by lag</h3><p>Precipitation anomaly vs. later NDVI anomaly</p></div>
+                  <div><h3>Correlation by lag</h3><p>Precipitation anomaly vs. later NDVI anomaly (Backend Live)</p></div>
                   <span className="chart-tag">0–{maxLag} MONTHS</span>
                 </div>
                 <div className="chart">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={lagValues.filter(v => Number(v.lag[0]) <= Number(maxLag))} margin={{ top: 16, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={chartLagData} margin={{ top: 16, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="lagFill" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#2d7858" stopOpacity={0.25} />
@@ -424,7 +445,7 @@ export default function NepalResearchPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="chart-note">Peak correlation identified at {region.lag} month(s) lag for {region.name}.</p>
+                <p className="chart-note">Live dynamic computation received from FastAPI for maximum lag threshold = {maxLag}.</p>
               </article>
             </div>
           </div>

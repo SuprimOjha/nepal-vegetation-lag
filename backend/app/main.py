@@ -13,6 +13,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/api/datasets")
 def get_datasets():
     return {
@@ -30,10 +34,6 @@ def get_regions():
             {"id": "terai", "name": "Terai Lowlands", "country": "Nepal", "default_lag_months": 1, "r": 0.74},
         ]
     }
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
 
 @app.get("/api/analysis/nepal")
 def get_nepal_analysis(max_lag: int = 6):
