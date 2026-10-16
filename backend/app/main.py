@@ -2,7 +2,7 @@ from typing import Literal
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from backend.services.processor import process_nepal_lag_analysis
+from services.processor import process_nepal_lag_analysis
 
 app = FastAPI(title="EonPulse Nepal API")
 
