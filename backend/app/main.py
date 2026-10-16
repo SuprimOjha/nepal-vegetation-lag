@@ -1,16 +1,16 @@
 from typing import Literal
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from backend.services.processor import process_nepal_lag_analysis
 
 app = FastAPI(title="EonPulse Nepal API")
 
-# Enable CORS for Next.js frontend
+# 1. Enable CORS for local development and your live Vercel frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",                  # Local development frontend
+        "http://localhost:3000",                      # Local development frontend
         "https://south-asia-vegetation-lag.vercel.app"  # Your live Vercel frontend
     ],
     allow_credentials=True,
@@ -18,14 +18,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Configure Allowed/Trusted Hosts for production security
+# 2. Configure Allowed/Trusted Hosts for production security on Render
 app.add_middleware(
     TrustedHostMiddleware, 
     allowed_hosts=[
         "localhost", 
         "127.0.0.1", 
-        "*.onrender.com",                      # Allows your Render backend domain and subdomains
-        "south-asia-vegetation-lag.vercel.app" # Optional: add your frontend if needed
+        "*.onrender.com",                             # Automatically allows your Render backend domain/subdomains
+        "south-asia-vegetation-lag.vercel.app"        # Frontend host inclusion if needed
     ]
 )
 
