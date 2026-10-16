@@ -1,7 +1,10 @@
 import os
+import logging
 import numpy as np
 import xarray as xr
 import earthaccess
+
+logger = logging.getLogger(__name__)
 
 # Nepal spatial domain bounds
 NEPAL_BBOX = {
@@ -41,15 +44,28 @@ def compute_zone_lag(zone_id: str = "all", max_lag: int = 6):
                 ds = xr.open_dataset(files[0], engine="h5netcdf" if "HDF5" in str(files[0]) else "netcdf4")
                 if "precipitation" in ds.variables or "precip" in ds.variables:
                     var_name = "precipitation" if "precipitation" in ds.variables else "precip"
-                    precip_ts = ds[var_name].mean(dim=["lat", "lon"]).values
+                    precip_ts = np.asarray(
+                        ds[var_name].mean(dim=["lat", "lon"]).values
+                    ).squeeze()
                     
-                    correlations = []
-                    for lag in range(max_lag + 1):
-                        r = np.corrcoef(precip_ts, precip_ts)[0, 1] if lag == 0 else np.corrcoef(precip_ts[:-lag], precip_ts[lag:])[0, 1]
-                        correlations.append({"lag": f"{lag} mo", "correlation": round(float(r), 2)})
-                    return correlations
+                    if precip_ts.ndim == 1 and precip_ts.size >= max_lag + 2:
+                        correlations = []
+                        for lag in range(max_lag + 1):
+                            current = precip_ts if lag == 0 else precip_ts[:-lag]
+                            shifted = precip_ts if lag == 0 else precip_ts[lag:]
+                            r = float(np.corrcoef(current, shifted)[0, 1])
+                            if not np.isfinite(r):
+                                break
+                            correlations.append(
+                                {"lag": f"{lag} mo", "correlation": round(r, 2)}
+                            )
+                        if len(correlations) == max_lag + 1:
+                            return correlations
     except Exception as e:
-        print(f"Live stream evaluation note: {e}. Utilizing zone-specific baseline profile.")
+        logger.warning(
+            "Live stream evaluation failed; utilizing zone-specific baseline profile: %s",
+            e,
+        )
 
     # Zone-specific empirical baseline curve fallback
     peak_lag = PHYSIOGRAPHIC_ZONES.get(zone_id, {}).get("peak_lag", 2)

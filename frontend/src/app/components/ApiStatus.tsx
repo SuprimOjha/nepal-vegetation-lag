@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, XCircle, LoaderCircle } from "lucide-react";
+import { CheckCircle2, XCircle, LoaderCircle } from "lucide-react";
 
 type ApiState = "checking" | "connected" | "disconnected";
 
@@ -12,16 +12,13 @@ export default function ApiStatus() {
     let active = true;
 
     async function checkApi() {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!baseUrl) {
-        setStatus("disconnected");
-        return;
-      }
+      const baseUrl = (
+        process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+      ).replace(/\/+$/, "");
 
       try {
         const response = await fetch(
-          `${baseUrl.replace(/\/$/, "")}/health`,
+          `${baseUrl}/health`,
           { cache: "no-store" }
         );
 

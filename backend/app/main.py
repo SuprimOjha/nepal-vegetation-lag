@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from typing import Literal
+
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from backend.services.processor import process_nepal_lag_analysis
 
@@ -36,11 +38,9 @@ def get_regions():
     }
 
 @app.get("/api/analysis/nepal")
-def get_nepal_analysis(max_lag: int = 6):
-    result = process_nepal_lag_analysis(max_lag=max_lag)
-    return result
-
-@app.get("/api/analysis/nepal")
-def get_nepal_analysis(zone: str = "all", max_lag: int = 6):
+def get_nepal_analysis(
+    zone: Literal["all", "terai", "siwalik", "midhills", "kathmandu", "highmountains"] = "all",
+    max_lag: int = Query(default=6, ge=0),
+):
     result = process_nepal_lag_analysis(zone_id=zone, max_lag=max_lag)
     return result

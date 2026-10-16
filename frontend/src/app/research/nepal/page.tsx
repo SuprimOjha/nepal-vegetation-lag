@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchDatasets, fetchRegions } from "@/app/services/api";
+import {
+  fetchDatasets,
+  fetchNepalAnalysis,
+  fetchRegions,
+  type LagCorrelation,
+} from "@/app/services/api";
 import ApiStatus from "@/app/components/ApiStatus";
 import {
   Activity,
@@ -44,7 +49,7 @@ const rainfallData = [
   { month: "Dec", rain: 19, ndvi: 0.27 },
 ];
 
-const fallbackLagValues = [
+const fallbackLagValues: LagCorrelation[] = [
   { lag: "0 mo", correlation: 0.31 },
   { lag: "1 mo", correlation: 0.48 },
   { lag: "2 mo", correlation: 0.68 },
@@ -55,18 +60,25 @@ const fallbackLagValues = [
 ];
 
 const nepalLocations = [
-  { name: "Eastern Terai Lowlands", zone: "Terai Belt", lag: 1, r: 0.74 },
-  { name: "Eastern Mid-Hills", zone: "Hilly Region", lag: 2, r: 0.68 },
-  { name: "Kathmandu Valley Basin", zone: "Intermountain Valley", lag: 2, r: 0.71 },
-  { name: "Annapurna Conservation Area", zone: "High Mountain", lag: 3, r: 0.61 },
-  { name: "Western Siwalik Range", zone: "Churia Hills", lag: 1, r: 0.72 },
-  { name: "Far-Western Lowlands", zone: "Terai Belt", lag: 1, r: 0.76 },
+  { name: "Eastern Terai Lowlands", zone: "Terai Belt", apiZone: "terai", lag: 1, r: 0.74 },
+  { name: "Eastern Mid-Hills", zone: "Hilly Region", apiZone: "midhills", lag: 2, r: 0.68 },
+  { name: "Kathmandu Valley Basin", zone: "Intermountain Valley", apiZone: "kathmandu", lag: 2, r: 0.71 },
+  { name: "Annapurna Conservation Area", zone: "High Mountain", apiZone: "highmountains", lag: 3, r: 0.61 },
+  { name: "Western Siwalik Range", zone: "Churia Hills", apiZone: "siwalik", lag: 1, r: 0.72 },
+  { name: "Far-Western Lowlands", zone: "Terai Belt", apiZone: "terai", lag: 1, r: 0.76 },
 ];
 
 const mapColors = [
   "#e2efd9", "#c7e2ba", "#a4d19d", "#78b982",
   "#4e9a70", "#2d7858", "#18543e",
 ];
+
+type AnalysisResultState = {
+  zone: string;
+  maxLag: number;
+  data: LagCorrelation[] | null;
+  error: string | null;
+};
 
 function SectionTitle({
   title,
@@ -94,9 +106,10 @@ export default function NepalResearchPage() {
   const [layer, setLayer] = useState("lag");
   const [notice, setNotice] = useState("");
 
-  const [backendDatasets, setBackendDatasets] = useState<any[]>([]);
-  const [backendRegions, setBackendRegions] = useState<any[]>([]);
-  const [dynamicLagAnalysis, setDynamicLagAnalysis] = useState<any[]>([]);
+  const [backendDatasets, setBackendDatasets] = useState<{ short_name: string; name: string; format: string }[]>([]);
+  const [backendRegions, setBackendRegions] = useState<{ id: string; name: string }[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResultState | null>(null);
+  const region = nepalLocations[selected];
 
   // Initial load for datasets & regions
   useEffect(() => {
@@ -109,26 +122,42 @@ export default function NepalResearchPage() {
     });
   }, []);
 
-  // Fetch dynamic analysis calculations when maxLag changes
+  // Refresh analysis whenever the selected zone or lag window changes.
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    fetch(`${baseUrl}/api/analysis/nepal?max_lag=${maxLag}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Analysis endpoint failed");
-        return res.json();
-      })
+    const controller = new AbortController();
+    fetchNepalAnalysis(region.apiZone, Number(maxLag), controller.signal)
       .then(data => {
-        if (data && data.lag_analysis) {
-          setDynamicLagAnalysis(data.lag_analysis);
-        }
+        if (controller.signal.aborted) return;
+        setAnalysisResult({
+          zone: region.apiZone,
+          maxLag: Number(maxLag),
+          data: data.lag_analysis,
+          error: null,
+        });
       })
-      .catch(() => {
-        console.warn("Using fallback lag values.");
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        const message = error instanceof Error ? error.message : "Unknown analysis error";
+        console.error("Nepal analysis request failed; showing fallback data.", error);
+        setAnalysisResult({
+          zone: region.apiZone,
+          maxLag: Number(maxLag),
+          data: null,
+          error: message,
+        });
       });
-  }, [maxLag]);
+    return () => controller.abort();
+  }, [region.apiZone, maxLag]);
 
-  const region = nepalLocations[selected];
-  const chartLagData = dynamicLagAnalysis.length > 0 ? dynamicLagAnalysis : fallbackLagValues;
+  const currentAnalysis = analysisResult?.zone === region.apiZone &&
+    analysisResult.maxLag === Number(maxLag)
+    ? analysisResult
+    : null;
+  const analysisLoading = currentAnalysis === null;
+  const analysisError = currentAnalysis?.error ?? null;
+  const chartLagData = currentAnalysis?.data
+    ? currentAnalysis.data
+    : fallbackLagValues.slice(0, Number(maxLag) + 1);
 
   function exportSettings() {
     const file = new Blob(
@@ -425,8 +454,8 @@ export default function NepalResearchPage() {
 
               <article className="panel chart-panel">
                 <div className="chart-heading">
-                  <div><h3>Correlation by lag</h3><p>Precipitation anomaly vs. later NDVI anomaly (Backend Live)</p></div>
-                  <span className="chart-tag">0–{maxLag} MONTHS</span>
+                  <div><h3>Correlation by lag</h3><p>{region.name} · precipitation vs. NDVI anomaly</p></div>
+                  <span className="chart-tag">{analysisLoading ? "LOADING" : analysisError ? "FALLBACK" : "API"}</span>
                 </div>
                 <div className="chart">
                   <ResponsiveContainer width="100%" height="100%">
@@ -445,7 +474,13 @@ export default function NepalResearchPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="chart-note">Live dynamic computation received from FastAPI for maximum lag threshold = {maxLag}.</p>
+                <p className="chart-note" role={analysisError ? "alert" : "status"} aria-live="polite">
+                  {analysisLoading
+                    ? `Loading ${region.name} analysis for lags 0–${maxLag} months…`
+                    : analysisError
+                      ? `Analysis unavailable (${analysisError}); showing fallback values for lags 0–${maxLag} months.`
+                      : `FastAPI analysis loaded for ${region.name}, lags 0–${maxLag} months.`}
+                </p>
               </article>
             </div>
           </div>
