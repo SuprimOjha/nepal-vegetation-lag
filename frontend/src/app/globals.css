@@ -323,3 +323,17 @@ tbody tr:hover, tbody tr.selected-row { background: #f3f8f1; }
 .granule-row strong { color: #405846; font-size: 10px; }
 .granule-row span { color: #839085; font-size: 9px; }
 .granule-row a { color: #367253; font-size: 9px; text-decoration: underline; }
+
+
+/* Keyboard focus and unavailable-control affordances. */
+button:focus-visible, a:focus-visible, select:focus-visible {
+  outline: 3px solid #6b9c7d;
+  outline-offset: 2px;
+}
+button:disabled, select:disabled {
+  cursor: not-allowed;
+  opacity: .68;
+}
+.catalog-inspector a:focus-visible, .dataset a:focus-visible {
+  border-radius: 3px;
+}
