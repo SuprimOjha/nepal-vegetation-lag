@@ -1,6 +1,7 @@
 """FastAPI endpoints for transparent, reproducible Nepal research."""
 from typing import Literal
 from datetime import datetime, timezone
+import os
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -142,7 +143,7 @@ def get_provenance():
         },
         "sources": DATA_SOURCES,
         "reproducibility": {
-            "code_revision": "See the repository commit history",
+            "code_revision": os.getenv("RENDER_GIT_COMMIT") or os.getenv("GITHUB_SHA"),
             "analysis_run_id": None,
             "input_file_checksums": [],
             "parameters": None,
