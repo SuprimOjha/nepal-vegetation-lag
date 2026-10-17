@@ -198,7 +198,7 @@ export default function NepalResearchPage() {
 
           <SectionTitle title="Nepal topographic map" subtitle="Terrain basemap and study-region markers. Markers do not represent pixel-level lag measurements." />
           <div className="map-layout" id="map">
-            <article className="panel map-panel"><div className="panel-header"><div><span className="live-dot" /> Nepal domain <span className="muted">/ Topographic context</span></div><select value={layer} onChange={e => setLayer(e.target.value)}><option value="lag">Lag layer — unavailable</option><option value="correlation">Correlation layer — unavailable</option></select></div>
+            <article className="panel map-panel"><div className="panel-header"><div><span className="live-dot" /> Nepal domain <span className="muted">/ Topographic context</span></div><select disabled value="unavailable" aria-label="Scientific raster layer unavailable"><option value="unavailable">No validated analysis raster available</option></select></div>
               <div className="map-canvas"><div className="map-grid" /><NepalTopoMap locations={zones.map((z, i) => ({ ...z, lag: null, r: null, color: markerColors[i] }))} selected={selected} layer={layer} onSelect={setSelected} /></div>
               <div className="map-legend"><div><strong>REGIONAL MARKERS</strong><span>Locations only</span></div><div className="legend-colors">{markerColors.map(color => <i key={color} style={{ background: color }} />)}</div><div className="legend-labels"><span>Study area markers</span><span>No numeric result encoded</span></div></div>
             </article>
