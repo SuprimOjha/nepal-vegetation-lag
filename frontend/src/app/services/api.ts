@@ -71,6 +71,9 @@ export type NepalAnalysisResponse = {
     measurements_included: boolean;
     catalog_discovery_is_analysis: boolean;
     software: string;
+    code_revision: string | null;
+    run_id: string | null;
+    input_file_checksums: string[];
   };
 };
 
