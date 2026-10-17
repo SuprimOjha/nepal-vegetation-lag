@@ -6,8 +6,9 @@ type Zone = {
   name: string;
   zone: string;
   apiZone: string;
-  lag: number;
-  r: number;
+  lag: number | null;
+  r: number | null;
+  color: string;
 };
 
 type Props = {
@@ -29,6 +30,7 @@ const coordinates: [number, number][] = [
 const lagColors = ["#e2efd9", "#c7e2ba", "#a4d19d", "#78b982", "#4e9a70", "#2d7858", "#18543e"];
 
 function markerColor(zone: Zone, layer: string) {
+  if (zone.lag === null || zone.r === null) return zone.color;
   if (layer === "correlation") {
     if (zone.r >= 0.73) return "#176b45";
     if (zone.r >= 0.68) return "#4e9a70";
@@ -77,9 +79,9 @@ export default function NepalTopoMap({ locations, selected, layer, onSelect }: P
               <br />
               {zone.zone}, Nepal
               <br />
-              {layer === "lag" ? `Illustrative response lag: ${zone.lag} month(s)` : `Illustrative correlation: r = ${zone.r.toFixed(2)}`}
+              {zone.lag === null || zone.r === null ? "No measured lag or correlation result is available for this marker." : layer === "lag" ? `Computed response lag: ${zone.lag} month(s)` : `Computed correlation: r = ${zone.r.toFixed(2)}`}
               <br />
-              <span>Prototype values — not yet a satellite-derived raster.</span>
+              <span>Geographic marker only. No pixel-level result is encoded here.</span>
               <br />
               <button type="button" onClick={() => onSelect(index)}>View zone details</button>
             </Popup>
