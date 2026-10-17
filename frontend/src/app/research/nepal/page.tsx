@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Activity, ArrowUpRight, BarChart3, CalendarDays, CloudRain, Download, FlaskConical, Leaf, MapPin, ShieldCheck, X } from "lucide-react";
+import { Activity, BarChart3, CalendarDays, CloudRain, Download, FlaskConical, Leaf, MapPin, ShieldCheck, X } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import ApiStatus from "@/app/components/ApiStatus";
 import { fetchDatasets, fetchNepalAnalysis, fetchNasaGranules, type NepalAnalysisResponse, type SourceDataset, type NasaCatalogResponse } from "@/app/services/api";
