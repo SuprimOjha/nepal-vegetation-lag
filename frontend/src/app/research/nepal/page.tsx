@@ -128,7 +128,7 @@ export default function NepalResearchPage() {
       currentAnalysis.provenance.code_revision,
       currentAnalysis.provenance.generated_at_utc,
     ]);
-    const csv = [header, ...rows].map(row => row.map(quote).join(",")).join("\\r\\n");
+    const csv = [header, ...rows].map(row => row.map(quote).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
