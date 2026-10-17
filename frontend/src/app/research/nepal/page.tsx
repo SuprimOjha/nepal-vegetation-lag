@@ -33,7 +33,7 @@ export default function NepalResearchPage() {
   const [yearStart, setYearStart] = useState("2003");
   const [yearEnd, setYearEnd] = useState("2024");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [layer, setLayer] = useState("lag");
+  const layer = "lag";
   const [notice, setNotice] = useState("");
   const [datasets, setDatasets] = useState<SourceDataset[]>([]);
   const [datasetError, setDatasetError] = useState<string | null>(null);
@@ -145,7 +145,7 @@ export default function NepalResearchPage() {
       start_year: Number(yearStart),
       end_year: Number(yearEnd),
       max_lag_months: Number(maxLag),
-      selected_map_layer: layer,
+      selected_map_layer: "not_available",
       analysis_status: currentAnalysis?.analysis_status ?? "unknown",
       provenance: currentAnalysis?.provenance ?? null,
     };
