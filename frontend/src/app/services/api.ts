@@ -80,7 +80,23 @@ export type NepalAnalysisResponse = {
 export async function fetchDatasets(): Promise<{ status: string; data_downloaded: boolean; datasets: SourceDataset[] }> {
   const res = await fetch(`${API_BASE_URL}/datasets`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Dataset source request failed (HTTP ${res.status})`);
-  return res.json();
+  const data: unknown = await res.json();
+  if (typeof data !== "object" || data === null) throw new Error("Dataset catalogue returned an invalid response");
+  const result = data as Record<string, unknown>;
+  if (
+    result.status !== "source_catalog" ||
+    result.data_downloaded !== false ||
+    !Array.isArray(result.datasets) ||
+    !result.datasets.every((item: unknown) => {
+      if (typeof item !== "object" || item === null) return false;
+      const row = item as Record<string, unknown>;
+      return ["short_name", "title", "variable", "provider", "landing_page", "catalog", "status", "role"]
+        .every(key => typeof row[key] === "string");
+    })
+  ) {
+    throw new Error("Dataset catalogue failed its source-status contract");
+  }
+  return data as { status: string; data_downloaded: boolean; datasets: SourceDataset[] };
 }
 
 
@@ -110,8 +126,20 @@ export async function fetchNasaGranules(
     throw new Error(detail);
   }
   const data = await res.json();
-  if (data.status !== "catalog_metadata" || data.is_download !== false || data.is_analysis !== false || data.returned_count_is_total !== false || !Array.isArray(data.granules)) {
-    throw new Error("NASA catalog response did not satisfy the metadata-only contract");
+  if (
+    data.status !== "catalog_metadata" ||
+    data.is_download !== false ||
+    data.is_analysis !== false ||
+    data.returned_count_is_total !== false ||
+    data.product !== product ||
+    data.temporal_filter?.start !== `${startYear}-01-01` ||
+    data.temporal_filter?.end !== `${endYear}-12-31` ||
+    !Array.isArray(data.granules) ||
+    data.returned_count !== data.granules.length ||
+    data.limit !== limit ||
+    typeof data.queried_at_utc !== "string"
+  ) {
+    throw new Error("NASA catalog response failed the metadata-only contract or query-parameter checks");
   }
   return data as NasaCatalogResponse;
 }
