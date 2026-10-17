@@ -232,7 +232,6 @@ export default function NepalResearchPage() {
                     <select value={catalogProduct} onChange={e => setCatalogProduct(e.target.value)}>
                       <option value="MOD13A3">MOD13A3 · MODIS NDVI</option>
                       <option value="GPM_3IMERGM">GPM_3IMERGM · monthly precipitation</option>
-                      <option value="SRTMGL1">SRTMGL1 · terrain reference</option>
                     </select>
                   </label>
                   <button className="btn btn-primary" onClick={inspectNasaCatalog} disabled={catalogLoading}>{catalogLoading ? "Querying NASA…" : "Search NASA CMR"}</button>
