@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   fetchDatasets,
   fetchNepalAnalysis,
@@ -8,6 +9,11 @@ import {
   type LagCorrelation,
 } from "@/app/services/api";
 import ApiStatus from "@/app/components/ApiStatus";
+
+const NepalTopoMap = dynamic(() => import("@/app/components/NepalTopoMap"), {
+  ssr: false,
+  loading: () => <div className="map-loading">Loading Nepal topographic map…</div>,
+});
 import {
   Activity,
   ArrowUpRight,
@@ -340,53 +346,16 @@ export default function NepalResearchPage() {
 
               <div className="map-canvas">
                 <div className="map-grid" />
-                <div className="map-label">NEPAL BOUNDING BOX</div>
-                <svg className="map-art" viewBox="0 0 700 440" role="img" aria-label="Geographic map preview of Nepal">
-                  <defs>
-                    <clipPath id="nepalClip">
-                      <path d="M150 180 Q 250 130, 350 140 Q 480 150, 580 200 Q 530 290, 400 300 Q 250 310, 150 180 Z" />
-                    </clipPath>
-                  </defs>
-                  
-                  <path d="M150 180 Q 250 130, 350 140 Q 480 150, 580 200 Q 530 290, 400 300 Q 250 310, 150 180 Z" fill="#dfe8d8" stroke="#1b4d3e" strokeWidth="3" />
-                  
-                  <g clipPath="url(#nepalClip)">
-                    {Array.from({ length: 10 }, (_, row) =>
-                      Array.from({ length: 16 }, (_, col) => {
-                        const n = (row * 2 + col * 3) % 7;
-                        return <rect key={`${row}-${col}`} x={130 + col * 30} y={120 + row * 22} width="27" height="20" rx="2" fill={mapColors[n]} stroke="#fff" strokeWidth=".8" opacity=".92" />;
-                      })
-                    )}
-                  </g>
-
-                  <path d="M180 200 Q 270 180, 380 210 Q 460 230, 540 215" fill="none" stroke="#609ab3" strokeWidth="2.5" opacity="0.7" />
-                  <path d="M280 170 Q 320 230, 300 270" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
-                  <path d="M420 160 Q 450 210, 490 260" fill="none" stroke="#609ab3" strokeWidth="2" opacity="0.6" />
-
-                  <text x="310" y="220" className="country-label" style={{ fontWeight: 800, fill: "#1b4d3e", fontSize: "16px" }}>NEPAL RESEARCH DOMAIN ★</text>
-
-                  {[
-                    { x: 200, y: 260, i: 0 },
-                    { x: 350, y: 210, i: 1 },
-                    { x: 320, y: 235, i: 2 },
-                    { x: 440, y: 190, i: 3 },
-                    { x: 230, y: 250, i: 4 },
-                    { x: 170, y: 270, i: 5 },
-                  ].map(p => (
-                    <g key={p.i} className="map-point" onClick={() => setSelected(p.i)} role="button" tabIndex={0}>
-                      <circle cx={p.x} cy={p.y} r={selected === p.i ? 11 : 8} fill="#fff" stroke="#1b4d3e" strokeWidth="2.5" />
-                      <circle cx={p.x} cy={p.y} r="4" fill={mapColors[nepalLocations[p.i].lag]} />
-                    </g>
-                  ))}
-                </svg>
+                <div className="map-label">NEPAL · TOPOGRAPHIC TERRAIN</div>
+                <NepalTopoMap locations={nepalLocations} selected={selected} layer={layer} onSelect={setSelected} />
                 <div className="map-controls"><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>+</button><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>−</button></div>
-                <div className="map-disclaimer">Nepal bounding box raster grid · 0.05° resolution</div>
+                <div className="map-disclaimer">Topographic basemap · zone markers are illustrative</div>
               </div>
 
               <div className="map-legend">
                 <div><strong>{layer === "lag" ? "RESPONSE LAG" : "CORRELATION STRENGTH"}</strong><span>{layer === "lag" ? "Months" : "Pearson r"}</span></div>
                 <div className="legend-colors">{mapColors.map(color => <i key={color} style={{ background: color }} />)}</div>
-                <div className="legend-labels"><span>0-1 Month (Fast)</span><span>3+ Months (Slow)</span></div>
+                <div className="legend-labels"><span>{layer === "lag" ? "0 months (fast)" : "Lower correlation"}</span><span>{layer === "lag" ? "6 months (slow)" : "Higher correlation"}</span></div>
               </div>
             </article>
 
@@ -403,11 +372,11 @@ export default function NepalResearchPage() {
               <div className="detail-stat">
                 <span>Correlation coefficient (r)</span>
                 <strong>{region.r.toFixed(2)}</strong>
-                <small className="demo-tag">EMPIRICAL</small>
+                <small className="demo-tag">PREVIEW</small>
               </div>
               <div className="detail-stat">
                 <span>Significance test</span>
-                <strong style={{ color: "#1b4d3e" }}>p &lt; 0.05 (Valid)</strong>
+                <strong style={{ color: "#8a7448", fontSize: "14px" }}>Pending validation</strong>
               </div>
 
               <div className="research-note">
