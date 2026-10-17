@@ -1,76 +1,96 @@
-import numpy as np
-import pandas as pd
-try:
-    import earthaccess
-except ImportError:
-    earthaccess = None
+"""Truthful analysis contract for the Nepal vegetation-lag prototype.
 
-NEPAL_BOUNDING_BOX = (80.05, 26.34, 88.20, 30.45)  # (min_lon, min_lat, max_lon, max_lat)
+This module intentionally does not manufacture satellite measurements. Until the
+MODIS and GPM granules have been downloaded, quality-screened, aligned, and
+processed, it returns a not-computed status rather than illustrative statistics.
+"""
+from datetime import datetime, timezone
+
+NEPAL_BOUNDING_BOX = (80.05, 26.34, 88.20, 30.45)  # west, south, east, north
 
 ZONE_PROFILES = {
-    "terai": {"name": "Terai Lowlands", "default_lag_months": 1, "base_r": 0.74},
-    "siwalik": {"name": "Siwalik Hills", "default_lag_months": 2, "base_r": 0.69},
-    "midhills": {"name": "Mid-Hills", "default_lag_months": 2, "base_r": 0.65},
-    "kathmandu": {"name": "Kathmandu Valley", "default_lag_months": 1, "base_r": 0.71},
-    "highmountains": {"name": "High Mountains & Himalayas", "default_lag_months": 4, "base_r": 0.52},
-    "all": {"name": "All Nepal Aggregate", "default_lag_months": 2, "base_r": 0.68}
+    "terai": {"name": "Terai Lowlands"},
+    "siwalik": {"name": "Siwalik Hills"},
+    "midhills": {"name": "Mid-Hills"},
+    "kathmandu": {"name": "Kathmandu Valley"},
+    "highmountains": {"name": "High Mountains & Himalayas"},
+    "all": {"name": "All Nepal Aggregate"},
 }
 
-def process_nepal_lag_analysis(zone_id: str = "all", max_lag: int = 6, target_year: int = 2023):
-    """
-    Performs vegetation-precipitation lag analysis for Nepal using 2023 NASA Earthdata streams.
-    """
-    zone_meta = ZONE_PROFILES.get(zone_id, ZONE_PROFILES["all"])
-    
-    # Attempt live CMR metadata discovery via earthaccess if available
-    granules_count = 0
-    if earthaccess is not None:
-        try:
-            # Search MODIS NDVI (MOD13A3) and GPM IMERG for 2023 over Nepal
-            results = earthaccess.search_data(
-                short_name="MOD13A3",
-                temporal=(f"{target_year}-01-01", f"{target_year}-12-31"),
-                bounding_box=NEPAL_BOUNDING_BOX,
-                count=12
-            )
-            granules_count = len(results)
-        except Exception:
-            granules_count = 12  # Fallback counter if network policy restricts outbound CMR calls on Render free tier
+DATA_SOURCES = [
+    {
+        "short_name": "MOD13A3",
+        "title": "MODIS/Terra Vegetation Indices Monthly L3 Global 1 km SIN Grid",
+        "variable": "NDVI",
+        "provider": "NASA LP DAAC",
+        "landing_page": "https://doi.org/10.5067/MODIS/MOD13A3.061",
+        "catalog": "https://search.earthdata.nasa.gov/search?q=MOD13A3",
+        "status": "not_downloaded",
+        "role": "Vegetation response variable",
+    },
+    {
+        "short_name": "GPM_3IMERGM",
+        "title": "GPM IMERG Monthly Precipitation",
+        "variable": "precipitation",
+        "provider": "NASA GES DISC",
+        "landing_page": "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary",
+        "catalog": "https://search.earthdata.nasa.gov/search?q=GPM_3IMERGM",
+        "status": "not_downloaded",
+        "role": "Rainfall predictor",
+    },
+    {
+        "short_name": "SRTMGL1",
+        "title": "NASA Shuttle Radar Topography Mission Global 1 arc second",
+        "variable": "elevation",
+        "provider": "NASA LP DAAC",
+        "landing_page": "https://doi.org/10.5067/MEaSUREs/SRTM/SRTMGL1.003",
+        "catalog": "https://search.earthdata.nasa.gov/search?q=SRTMGL1",
+        "status": "reference_only",
+        "role": "Terrain context; not currently used in calculations",
+    },
+]
 
-    # Generate exact 12-month time series for 2023 simulation / real processing
-    months = [f"{target_year}-{m:02d}" for m in range(1, 13)]
-    
-    # Base seasonal curves calibrated for Nepal's monsoon dynamics
-    np.random.seed(42 + len(zone_id))
-    base_precip = np.array([25, 30, 45, 80, 150, 350, 420, 380, 220, 90, 40, 25]) # Monsoon peak June-Aug
-    noise = np.random.normal(0, 10, size=12)
-    precipitation = np.clip(base_precip + noise, 5, 500).tolist()
 
-    # Vegetation index (NDVI scaled) lagging precipitation peaks by zone-specific lag months
-    lag = zone_meta["default_lag_months"]
-    shifted_precip = np.roll(base_precip, lag)
-    vegetation_ndvi = np.clip(0.3 + (shifted_precip / 600.0) + np.random.normal(0, 0.02, size=12), 0.1, 0.85).tolist()
-
-    # Cross-correlation array across tested lags (0 to max_lag)
-    lag_correlations = []
-    for l in range(max_lag + 1):
-        # Simulated robust correlation coefficient decay curve peaking at optimal lag
-        r_val = round(max(0.2, zone_meta["base_r"] - abs(l - lag) * 0.08), 3)
-        lag_correlations.append({"lag_months": l, "correlation_coefficient": r_val})
+def process_nepal_lag_analysis(
+    zone_id: str = "all",
+    max_lag: int = 6,
+    start_year: int = 2003,
+    end_year: int = 2024,
+):
+    """Return an explicit unavailable result until validated source arrays exist."""
+    zone_meta = ZONE_PROFILES.get(zone_id)
+    if zone_meta is None:
+        raise ValueError(f"Unknown zone: {zone_id}")
+    if start_year < 2000 or end_year > datetime.now(timezone.utc).year:
+        raise ValueError("Requested years are outside the supported request range")
+    if start_year > end_year:
+        raise ValueError("start_year must be less than or equal to end_year")
+    if not 0 <= max_lag <= 24:
+        raise ValueError("max_lag must be between 0 and 24 months")
 
     return {
-        "status": "success",
-        "target_year": target_year,
+        "status": "not_computed",
+        "analysis_status": "not_computed",
+        "analysis_reason": (
+            "No validated, downloaded MOD13A3 NDVI and GPM IMERG precipitation "
+            "time-series are available to this deployment. Catalog references or "
+            "a successful API health check are not evidence that analysis ran."
+        ),
         "zone": zone_id,
         "zone_name": zone_meta["name"],
+        "year_start": start_year,
+        "year_end": end_year,
+        "max_lag_months": max_lag,
+        "domain": "Nepal study bounding box",
         "bounding_box": list(NEPAL_BOUNDING_BOX),
-        "granules_analyzed": granules_count,
-        "optimal_lag_months": lag,
-        "peak_correlation": zone_meta["base_r"],
-        "time_series": {
-            "months": months,
-            "precipitation_mm": [round(p, 1) for p in precipitation],
-            "ndvi": [round(v, 3) for v in vegetation_ndvi]
+        "time_series": None,
+        "lag_analysis": [],
+        "data_sources": DATA_SOURCES,
+        "provenance": {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "calculation_performed": False,
+            "measurements_included": False,
+            "catalog_discovery_is_analysis": False,
+            "software": "EonPulse Nepal API",
         },
-        "lag_analysis": lag_correlations
     }
