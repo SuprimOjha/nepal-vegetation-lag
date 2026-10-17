@@ -232,6 +232,17 @@ export default function NepalResearchPage() {
             <p className="chart-note">NASA product pages explain the source data; they do not independently certify an EonPulse calculation. Independent reproduction requires the exact input files, code, settings, and output artifacts.</p>
           </section>
 
+                    <section className="panel bottom-panel" id="provenance" style={{ marginTop: 18 }}>
+            <div className="bottom-title"><ShieldCheck size={19} /><div><h3>Request provenance &amp; verification</h3><p>Values returned by the API for the currently selected settings</p></div></div>
+            <div className="workflow-step"><span>01</span><p><strong>API response time (UTC)</strong><br />{currentAnalysis?.provenance.generated_at_utc ?? "No analysis response available"}</p></div>
+            <div className="workflow-step"><span>02</span><p><strong>Code revision</strong><br />{currentAnalysis?.provenance.code_revision ? <a href={`https://github.com/SuprimOjha/nepal-vegetation-lag/commit/${currentAnalysis.provenance.code_revision}`} target="_blank" rel="noreferrer">{currentAnalysis.provenance.code_revision} ↗</a> : "Not supplied by the deployment environment"}</p></div>
+            <div className="workflow-step"><span>03</span><p><strong>Run ID</strong><br />{currentAnalysis?.provenance.run_id ?? "No scientific run has been recorded"}</p></div>
+            <div className="workflow-step"><span>04</span><p><strong>Calculation performed</strong><br />{currentAnalysis?.provenance.calculation_performed ? "Yes — verify the run manifest and output files below" : "No — this response contains no calculated scientific result"}</p></div>
+            <div className="workflow-step"><span>05</span><p><strong>Input file checksums</strong><br />{currentAnalysis?.provenance.input_file_checksums.length ? currentAnalysis.provenance.input_file_checksums.join(", ") : "None recorded; exact input files have not been verified by this deployment"}</p></div>
+            <div className="workflow-step"><span>06</span><p><strong>Interpretation</strong><br />{currentAnalysis?.provenance.measurements_included ? "Measurements are present; check the data dictionary, method, and source links before use." : "This response is status/provenance metadata only. Do not cite it as an empirical finding."}</p></div>
+            <p className="chart-note">A timestamp and commit reference help trace software behavior but do not validate science on their own. A computed release must also publish input granule IDs, checksums, processing parameters, quality rules, and result-file checksums.</p>
+          </section>
+
           <footer className="footer"><span><Leaf size={14} /> EonPulse Nepal · Earth Systems Research</span><span><ShieldCheck size={14} /> Transparent status · Reproducibility first</span></footer>
         </div>
         {notice && <button className="toast" onClick={() => setNotice("")}>{notice}<X size={14} /></button>}
