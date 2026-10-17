@@ -103,6 +103,40 @@ export default function NepalResearchPage() {
     }
   }
 
+  function exportAnalysisCsv() {
+    if (!computed || !currentAnalysis) {
+      setNotice("No computed scientific results are available to export.");
+      return;
+    }
+    const quote = (value: unknown) => {
+      const text = value == null ? "" : String(value);
+      return `"${text.replaceAll('"', '""')}"`;
+    };
+    const header = ["zone_id", "zone_name", "year_start", "year_end", "lag_months", "pearson_r", "valid_pairs_n", "p_value", "ci_lower", "ci_upper", "run_id", "code_revision", "generated_at_utc"];
+    const rows = currentAnalysis.lag_analysis.map(point => [
+      currentAnalysis.zone,
+      currentAnalysis.zone_name,
+      currentAnalysis.year_start,
+      currentAnalysis.year_end,
+      point.lag,
+      point.correlation,
+      point.n ?? null,
+      point.p_value ?? null,
+      point.ci_lower ?? null,
+      point.ci_upper ?? null,
+      currentAnalysis.provenance.run_id,
+      currentAnalysis.provenance.code_revision,
+      currentAnalysis.provenance.generated_at_utc,
+    ]);
+    const csv = [header, ...rows].map(row => row.map(quote).join(",")).join("\\r\\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `eonpulse-${currentAnalysis.zone}-lag-results.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   function exportSettings() {
     const manifest = {
       export_type: "analysis_request_settings_only",
@@ -143,7 +177,7 @@ export default function NepalResearchPage() {
         <div className="content" id="overview">
           <div className="hero">
             <div><div className="eyebrow">EARTH SYSTEMS · REPRODUCIBLE RESEARCH</div><h1>Rainfall to <span>vegetation lag.</span></h1><p className="hero-description">Investigate how vegetation responds to precipitation across Nepal. Each result should link to source products, exact analysis settings, uncertainty, and reproducible outputs.</p></div>
-            <div className="hero-actions"><button className="btn btn-secondary" onClick={() => setFiltersOpen(!filtersOpen)}><CalendarDays size={16} /> Analysis settings</button><button className="btn btn-primary" onClick={exportSettings}><Download size={16} /> Export request</button></div>
+            <div className="hero-actions"><button className="btn btn-secondary" onClick={() => setFiltersOpen(!filtersOpen)}><CalendarDays size={16} /> Analysis settings</button><button className="btn btn-primary" onClick={exportSettings}><Download size={16} /> Export request</button><button className="btn btn-secondary" onClick={exportAnalysisCsv} disabled={!computed}><Download size={16} /> Export results CSV</button></div>
           </div>
 
           <div className="preview-warning"><div className="warning-icon"><ShieldCheck size={19} /></div><div><strong>Scientific data status: {computed ? "analysis reported as computed" : "no validated results available"}</strong><p>{loading ? "Checking the analysis endpoint…" : analysisError ? `API request failed: ${analysisError}. No fallback values are displayed.` : currentAnalysis?.analysis_reason ?? "API is reachable, but that alone does not establish that NASA granules were downloaded or processed."}</p></div><span className="preview-badge">{computed ? "CHECK PROVENANCE" : "NOT COMPUTED"}</span></div>
