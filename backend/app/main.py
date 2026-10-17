@@ -4,6 +4,11 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+try:
+    import earthaccess
+except ImportError:
+    earthaccess = None
+
 from services.processor import (
     DATA_SOURCES,
     NEPAL_BOUNDING_BOX,
@@ -144,4 +149,75 @@ def get_provenance():
             "parameters": None,
             "warning": "No scientific run has been completed, so there are no result files, checksums, or run identifier to verify yet.",
         },
+    }
+
+
+@app.get("/api/catalog/granules")
+def search_nasa_granules(
+    product: Literal["MOD13A3", "GPM_3IMERGM", "SRTMGL1"] = "MOD13A3",
+    start_year: int = Query(default=2023, ge=2000, le=2100),
+    end_year: int = Query(default=2023, ge=2000, le=2100),
+    limit: int = Query(default=20, ge=1, le=100),
+):
+    """Query NASA CMR granule metadata. This is catalog discovery, not a download."""
+    if start_year > end_year:
+        raise HTTPException(status_code=422, detail="start_year must be <= end_year")
+    if earthaccess is None:
+        raise HTTPException(status_code=503, detail="earthaccess is not installed; NASA catalog lookup unavailable")
+    temporal = (f"{start_year}-01-01", f"{end_year}-12-31")
+    try:
+        results = earthaccess.search_data(
+            short_name=product,
+            temporal=temporal,
+            bounding_box=NEPAL_BOUNDING_BOX,
+            count=limit,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"NASA catalog lookup failed: {type(exc).__name__}. No granule count or result has been inferred.",
+        ) from exc
+
+    granules = []
+    for item in results:
+        umm = getattr(item, "umm", None)
+        if not isinstance(umm, dict) and isinstance(item, dict):
+            umm = item.get("umm", item)
+        if not isinstance(umm, dict):
+            umm = {}
+        temporal_extent = umm.get("TemporalExtent") or {}
+        range_datetime = temporal_extent.get("RangeDateTime") or {}
+        related_urls = umm.get("RelatedUrls") or []
+        urls = [
+            entry.get("URL")
+            for entry in related_urls
+            if isinstance(entry, dict) and entry.get("URL")
+        ]
+        granules.append({
+            "granule_id": umm.get("GranuleUR"),
+            "title": umm.get("CollectionReference", {}).get("ShortName", product),
+            "beginning_datetime": range_datetime.get("BeginningDateTime"),
+            "ending_datetime": range_datetime.get("EndingDateTime"),
+            "producer_granule_id": umm.get("DataGranule", {}).get("Identifiers", [{}])[0].get("Identifier") if umm.get("DataGranule", {}).get("Identifiers") else None,
+            "links": urls[:10],
+        })
+
+    return {
+        "status": "catalog_metadata",
+        "is_download": False,
+        "is_analysis": False,
+        "product": product,
+        "temporal_filter": {"start": temporal[0], "end": temporal[1]},
+        "spatial_filter": {
+            "west": NEPAL_BOUNDING_BOX[0],
+            "south": NEPAL_BOUNDING_BOX[1],
+            "east": NEPAL_BOUNDING_BOX[2],
+            "north": NEPAL_BOUNDING_BOX[3],
+        },
+        "limit": limit,
+        "returned_count": len(granules),
+        "returned_count_is_total": False,
+        "granules": granules,
+        "interpretation": "These are NASA catalog metadata records returned for this query, not proof that files were downloaded, quality-screened, or analyzed.",
+        "queried_at_utc": datetime.now(timezone.utc).isoformat(),
     }
