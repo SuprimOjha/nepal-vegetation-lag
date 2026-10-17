@@ -5,6 +5,7 @@ MODIS and GPM granules have been downloaded, quality-screened, aligned, and
 processed, it returns a not-computed status rather than illustrative statistics.
 """
 from datetime import datetime, timezone
+import os
 
 NEPAL_BOUNDING_BOX = (80.05, 26.34, 88.20, 30.45)  # west, south, east, north
 
@@ -92,5 +93,8 @@ def process_nepal_lag_analysis(
             "measurements_included": False,
             "catalog_discovery_is_analysis": False,
             "software": "EonPulse Nepal API",
+            "code_revision": os.getenv("RENDER_GIT_COMMIT") or os.getenv("GITHUB_SHA"),
+            "run_id": None,
+            "input_file_checksums": [],
         },
     }
