@@ -154,7 +154,7 @@ def get_provenance():
 
 @app.get("/api/catalog/granules")
 def search_nasa_granules(
-    product: Literal["MOD13A3", "GPM_3IMERGM", "SRTMGL1"] = "MOD13A3",
+    product: Literal["MOD13A3", "GPM_3IMERGM"] = "MOD13A3",
     start_year: int = Query(default=2023, ge=2000, le=2100),
     end_year: int = Query(default=2023, ge=2000, le=2100),
     limit: int = Query(default=20, ge=1, le=100),
