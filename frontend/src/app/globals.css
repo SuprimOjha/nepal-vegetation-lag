@@ -307,3 +307,19 @@ tbody tr:hover, tbody tr.selected-row { background: #f3f8f1; }
   .dataset a { margin-left: 40px; }
   .empty-chart { padding: 18px 12px; }
 }
+
+
+/* NASA catalogue explorer: record-level metadata with explicit limitations. */
+.catalog-inspector { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e8eee5; }
+.catalog-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.catalog-controls label { display: flex; flex-direction: column; gap: 6px; min-width: 220px; color: #7c897e; font-size: 10px; font-weight: 700; }
+.catalog-controls select { padding: 9px; border: 1px solid var(--line); border-radius: 7px; background: #fbfcfa; color: #465749; }
+.catalog-error { padding: 10px; border: 1px solid #efd9d3; border-radius: 7px; background: #fff8f6; color: #8a4d40; font-size: 10px; line-height: 1.6; }
+.catalog-results { margin-top: 12px; border: 1px solid #e7eee4; border-radius: 8px; padding: 12px; }
+.catalog-summary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: #607164; font-size: 10px; }
+.catalog-summary strong { color: #315c40; }
+.granule-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 10px 0; border-top: 1px solid #edf0eb; overflow-wrap: anywhere; }
+.granule-row:first-of-type { margin-top: 8px; }
+.granule-row strong { color: #405846; font-size: 10px; }
+.granule-row span { color: #839085; font-size: 9px; }
+.granule-row a { color: #367253; font-size: 9px; text-decoration: underline; }
