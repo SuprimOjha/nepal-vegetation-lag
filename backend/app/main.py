@@ -12,7 +12,6 @@ except ImportError:
 from services.processor import (
     DATA_SOURCES,
     NEPAL_BOUNDING_BOX,
-    ZONE_PROFILES,
     process_nepal_lag_analysis,
 )
 
