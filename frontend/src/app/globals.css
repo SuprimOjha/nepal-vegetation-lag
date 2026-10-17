@@ -259,3 +259,24 @@ tbody tr:hover, tbody tr.selected-row { background: #f3f8f1; }
   .metric > strong { font-size: 19px; }
   .map-canvas { height: 245px; }
 }
+
+
+/* Interactive OpenTopoMap terrain layer */
+.topo-map-shell { position: absolute; inset: 0; z-index: 1; background: #e7efe5; }
+.nepal-leaflet-map { width: 100%; height: 100%; font-family: Arial, Helvetica, sans-serif; background: #e7efe5; }
+.topo-map-label {
+  position: absolute; z-index: 500; top: 16px; right: 16px; pointer-events: none;
+  color: #284d3b; background: #ffffffdf; border: 1px solid #dce7da;
+  border-radius: 6px; padding: 7px 9px; font-size: 9px; letter-spacing: 1px; font-weight: 800;
+}
+.topo-map-disclaimer {
+  position: absolute; z-index: 500; bottom: 9px; left: 48px; pointer-events: none;
+  color: #637667; background: #ffffffdf; border-radius: 4px; padding: 5px 7px; font-size: 8px;
+}
+.map-loading { display: grid; place-items: center; height: 100%; min-height: 300px; color: #637667; font-size: 12px; background: #edf3e9; }
+.leaflet-popup-content { font-size: 12px; line-height: 1.65; }
+.leaflet-popup-content button { margin-top: 6px; padding: 5px 8px; border: 1px solid #d9e5d6; border-radius: 5px; background: #f2f7ef; color: #285b3e; }
+@media (max-width: 700px) {
+  .topo-map-label { top: 8px; right: 8px; font-size: 8px; }
+  .topo-map-disclaimer { left: 42px; max-width: calc(100% - 55px); }
+}
