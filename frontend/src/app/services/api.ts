@@ -146,24 +146,95 @@ export async function fetchNepalAnalysis(
     throw new Error("Analysis API returned an invalid response");
   }
   const result = data as Record<string, unknown>;
+  const provenance = result.provenance;
+  const timeSeries = result.time_series;
+  const lagAnalysis = result.lag_analysis;
+
   if (
     !["not_computed", "success"].includes(String(result.status)) ||
+    !["not_computed", "computed"].includes(String(result.analysis_status)) ||
     result.zone !== zone ||
     result.max_lag_months !== maxLag ||
     result.year_start !== startYear ||
     result.year_end !== endYear ||
-    !Array.isArray(result.lag_analysis) ||
-    typeof result.analysis_status !== "string" ||
-    typeof result.provenance !== "object" ||
-    result.provenance === null
+    typeof result.domain !== "string" ||
+    !Array.isArray(result.bounding_box) ||
+    !result.bounding_box.every((value) => typeof value === "number" && Number.isFinite(value)) ||
+    !Array.isArray(lagAnalysis) ||
+    !Array.isArray(result.data_sources) ||
+    typeof provenance !== "object" ||
+    provenance === null
   ) {
     throw new Error("Analysis response failed the documented data contract");
   }
-  if (result.analysis_status === "computed" && result.lag_analysis.length !== maxLag + 1) {
-    throw new Error("Computed analysis is incomplete: expected one value for every requested lag");
+
+  const provenanceRecord = provenance as Record<string, unknown>;
+  if (
+    typeof provenanceRecord.generated_at_utc !== "string" ||
+    typeof provenanceRecord.calculation_performed !== "boolean" ||
+    typeof provenanceRecord.measurements_included !== "boolean" ||
+    typeof provenanceRecord.catalog_discovery_is_analysis !== "boolean" ||
+    typeof provenanceRecord.software !== "string" ||
+    !(provenanceRecord.code_revision === null || typeof provenanceRecord.code_revision === "string") ||
+    !(provenanceRecord.run_id === null || typeof provenanceRecord.run_id === "string") ||
+    !Array.isArray(provenanceRecord.input_file_checksums)
+  ) {
+    throw new Error("Analysis provenance is incomplete or malformed");
   }
-  if (result.analysis_status === "not_computed" && result.lag_analysis.length !== 0) {
-    throw new Error("Uncomputed analysis must not contain result values");
+
+  const isComputed = result.analysis_status === "computed";
+  if (isComputed) {
+    if (result.status !== "success" || lagAnalysis.length !== maxLag + 1) {
+      throw new Error("Computed analysis is incomplete: expected one value for every requested lag");
+    }
+    if (
+      provenanceRecord.calculation_performed !== true ||
+      provenanceRecord.measurements_included !== true ||
+      timeSeries === null ||
+      typeof timeSeries !== "object"
+    ) {
+      throw new Error("Computed status requires measurements and calculation provenance");
+    }
+    const ts = timeSeries as Record<string, unknown>;
+    if (
+      !Array.isArray(ts.months) ||
+      !Array.isArray(ts.precipitation_mm) ||
+      !Array.isArray(ts.ndvi) ||
+      ts.months.length !== ts.precipitation_mm.length ||
+      ts.months.length !== ts.ndvi.length
+    ) {
+      throw new Error("Computed time-series arrays must have matching lengths");
+    }
+    for (const point of lagAnalysis) {
+      if (typeof point !== "object" || point === null) {
+        throw new Error("Malformed lag result");
+      }
+      const row = point as Record<string, unknown>;
+      if (
+        typeof row.lag !== "string" ||
+        typeof row.correlation !== "number" ||
+        !Number.isFinite(row.correlation) ||
+        row.correlation < -1 ||
+        row.correlation > 1
+      ) {
+        throw new Error("Lag result contains an invalid correlation coefficient");
+      }
+      if (row.n !== undefined && (typeof row.n !== "number" || !Number.isInteger(row.n) || row.n < 0)) {
+        throw new Error("Lag result contains an invalid sample count");
+      }
+      if (row.p_value !== undefined && row.p_value !== null &&
+        (typeof row.p_value !== "number" || row.p_value < 0 || row.p_value > 1)) {
+        throw new Error("Lag result contains an invalid p-value");
+      }
+    }
+  } else if (
+    result.status !== "not_computed" ||
+    lagAnalysis.length !== 0 ||
+    timeSeries !== null ||
+    provenanceRecord.calculation_performed !== false ||
+    provenanceRecord.measurements_included !== false
+  ) {
+    throw new Error("Uncomputed analysis must not contain scientific result values");
   }
   return data as NepalAnalysisResponse;
 }
