@@ -23,6 +23,7 @@ A product catalogue entry is not evidence of download, quality screening, or ana
 
 - `GET /health` — service health only; it does not claim that science calculations ran.
 - `GET /api/datasets` — documented source products and their explicitly declared status.
+- `GET /api/catalog/granules?product=MOD13A3&start_year=2023&end_year=2023&limit=20` — live NASA CMR metadata query (limited sample; not a download or analysis).
 - `GET /api/regions` — study-region names without fabricated statistics.
 - `GET /api/analysis/nepal?zone=all&max_lag=6&start_year=2003&end_year=2024` — current analysis contract; returns `not_computed` until validated source arrays are available.
 - `GET /api/methodology` — analysis stages, status, and definitions.
