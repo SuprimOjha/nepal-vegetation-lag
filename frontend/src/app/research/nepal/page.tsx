@@ -346,10 +346,7 @@ export default function NepalResearchPage() {
 
               <div className="map-canvas">
                 <div className="map-grid" />
-                <div className="map-label">NEPAL · TOPOGRAPHIC TERRAIN</div>
                 <NepalTopoMap locations={nepalLocations} selected={selected} layer={layer} onSelect={setSelected} />
-                <div className="map-controls"><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>+</button><button onClick={() => setNotice("Zoom available with interactive raster layers.")}>−</button></div>
-                <div className="map-disclaimer">Topographic basemap · zone markers are illustrative</div>
               </div>
 
               <div className="map-legend">
