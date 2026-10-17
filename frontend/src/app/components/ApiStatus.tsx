@@ -52,7 +52,7 @@ export default function ApiStatus() {
       className: "api-checking",
     },
     connected: {
-      label: "API connected",
+      label: "API healthy · service only",
       icon: CheckCircle2,
       className: "api-connected",
     },
