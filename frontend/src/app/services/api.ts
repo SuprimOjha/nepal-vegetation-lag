@@ -23,6 +23,30 @@ export type SourceDataset = {
   role: string;
 };
 
+export type NasaCatalogGranule = {
+  granule_id: string | null;
+  title: string;
+  beginning_datetime: string | null;
+  ending_datetime: string | null;
+  producer_granule_id: string | null;
+  links: string[];
+};
+
+export type NasaCatalogResponse = {
+  status: "catalog_metadata";
+  is_download: false;
+  is_analysis: false;
+  product: string;
+  temporal_filter: { start: string; end: string };
+  spatial_filter: { west: number; south: number; east: number; north: number };
+  limit: number;
+  returned_count: number;
+  returned_count_is_total: false;
+  granules: NasaCatalogGranule[];
+  interpretation: string;
+  queried_at_utc: string;
+};
+
 export type NepalAnalysisResponse = {
   status: "not_computed" | "success";
   analysis_status: "not_computed" | "computed";
@@ -54,6 +78,39 @@ export async function fetchDatasets(): Promise<{ status: string; data_downloaded
   const res = await fetch(`${API_BASE_URL}/datasets`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Dataset source request failed (HTTP ${res.status})`);
   return res.json();
+}
+
+
+export async function fetchNasaGranules(
+  product: string,
+  startYear: number,
+  endYear: number,
+  limit = 20,
+  signal?: AbortSignal,
+): Promise<NasaCatalogResponse> {
+  const query = new URLSearchParams({
+    product,
+    start_year: String(startYear),
+    end_year: String(endYear),
+    limit: String(limit),
+  });
+  const res = await fetch(`${API_BASE_URL}/catalog/granules?${query}`, {
+    cache: "no-store",
+    signal,
+  });
+  if (!res.ok) {
+    let detail = `NASA catalog request failed (HTTP ${res.status})`;
+    try {
+      const body = await res.json();
+      if (typeof body.detail === "string") detail = body.detail;
+    } catch { /* keep the HTTP fallback message */ }
+    throw new Error(detail);
+  }
+  const data = await res.json();
+  if (data.status !== "catalog_metadata" || data.is_download !== false || data.is_analysis !== false || data.returned_count_is_total !== false || !Array.isArray(data.granules)) {
+    throw new Error("NASA catalog response did not satisfy the metadata-only contract");
+  }
+  return data as NasaCatalogResponse;
 }
 
 export async function fetchRegions(): Promise<{ status: string; regions: { id: string; name: string; country: string }[] }> {
