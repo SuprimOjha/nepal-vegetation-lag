@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Activity, ArrowUpRight, BarChart3, CalendarDays, CloudRain, Download, FlaskConical, Leaf, MapPin, ShieldCheck, X } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import ApiStatus from "@/app/components/ApiStatus";
-import { fetchDatasets, fetchNepalAnalysis, type NepalAnalysisResponse, type SourceDataset } from "@/app/services/api";
+import { fetchDatasets, fetchNepalAnalysis, fetchNasaGranules, type NepalAnalysisResponse, type SourceDataset, type NasaCatalogResponse } from "@/app/services/api";
 
 const NepalTopoMap = dynamic(() => import("@/app/components/NepalTopoMap"), {
   ssr: false,
@@ -37,6 +37,10 @@ export default function NepalResearchPage() {
   const [notice, setNotice] = useState("");
   const [datasets, setDatasets] = useState<SourceDataset[]>([]);
   const [datasetError, setDatasetError] = useState<string | null>(null);
+  const [catalogProduct, setCatalogProduct] = useState("MOD13A3");
+  const [catalogResult, setCatalogResult] = useState<NasaCatalogResponse | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<NepalAnalysisResponse | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +88,20 @@ export default function NepalResearchPage() {
       ndvi: t.ndvi[i],
     }));
   }, [currentAnalysis]);
+
+  async function inspectNasaCatalog() {
+    setCatalogLoading(true);
+    setCatalogError(null);
+    setCatalogResult(null);
+    try {
+      const result = await fetchNasaGranules(catalogProduct, Number(yearStart), Number(yearEnd), 20);
+      setCatalogResult(result);
+    } catch (error) {
+      setCatalogError(error instanceof Error ? error.message : "NASA catalog query failed");
+    } finally {
+      setCatalogLoading(false);
+    }
+  }
 
   function exportSettings() {
     const manifest = {
@@ -172,6 +190,30 @@ export default function NepalResearchPage() {
             <section className="panel bottom-panel"><div className="bottom-title"><CloudRain size={19} /><div><h3>Source dataset catalogue</h3><p>Published product references and actual availability status</p></div></div>
               {datasetError ? <p className="chart-note">Could not retrieve source catalogue: {datasetError}</p> : datasets.length ? datasets.map(d => <div className="dataset" key={d.short_name}><span className="dataset-icon modis">{d.variable.slice(0, 1).toUpperCase()}</span><span><strong>{d.title}</strong><small>{d.provider} · {d.role} · Product ID: {d.short_name}</small></span><em>{d.status.replaceAll("_", " ")}</em><a href={d.landing_page} target="_blank" rel="noreferrer">Product docs ↗</a><a href={d.catalog} target="_blank" rel="noreferrer">NASA search ↗</a></div>) : <p className="chart-note">Loading product catalogue…</p>}
               <p className="chart-note">A source landing page verifies what a dataset is, not that EonPulse downloaded it. Product version, exact granule IDs, temporal coverage, quality processing, and file checksums must be published for a real result.</p>
+              <div className="catalog-inspector">
+                <div className="filter-heading"><strong>Live NASA granule metadata lookup</strong><span className="chart-tag">METADATA ONLY</span></div>
+                <div className="catalog-controls">
+                  <label>NASA product
+                    <select value={catalogProduct} onChange={e => setCatalogProduct(e.target.value)}>
+                      <option value="MOD13A3">MOD13A3 · MODIS NDVI</option>
+                      <option value="GPM_3IMERGM">GPM_3IMERGM · monthly precipitation</option>
+                      <option value="SRTMGL1">SRTMGL1 · terrain reference</option>
+                    </select>
+                  </label>
+                  <button className="btn btn-primary" onClick={inspectNasaCatalog} disabled={catalogLoading}>{catalogLoading ? "Querying NASA…" : "Search NASA CMR"}</button>
+                </div>
+                <p className="chart-note">Queries the NASA Common Metadata Repository for the selected years and study bounding box. Returned records are not downloads, and the returned count is a limited sample—not the total number of available granules.</p>
+                {catalogError && <p className="catalog-error" role="alert">{catalogError}. The query failed; no granule count is inferred.</p>}
+                {catalogResult && <div className="catalog-results">
+                  <div className="catalog-summary"><strong>{catalogResult.returned_count} records returned</strong><span>{catalogResult.product} · {catalogResult.temporal_filter.start} to {catalogResult.temporal_filter.end}</span></div>
+                  <p className="chart-note">{catalogResult.interpretation} Query time: {catalogResult.queried_at_utc}.</p>
+                  {catalogResult.granules.length === 0 ? <p className="chart-note">NASA returned no records for this query. Try another period or product; this does not prove no data exist outside the filter or limit.</p> : catalogResult.granules.map((g, i) => <div className="granule-row" key={g.granule_id ?? g.producer_granule_id ?? i}>
+                    <strong>{g.granule_id ?? g.producer_granule_id ?? "Granule ID not supplied"}</strong>
+                    <span>{g.beginning_datetime ?? "Start time unavailable"} — {g.ending_datetime ?? "End time unavailable"}</span>
+                    {g.links.slice(0, 3).map((url, j) => <a key={url + j} href={url} target="_blank" rel="noreferrer">NASA link {j + 1} ↗</a>)}
+                  </div>)}
+                </div>}
+              </div>
             </section>
             <section className="panel bottom-panel" id="method"><div className="bottom-title"><FlaskConical size={19} /><div><h3>Reproducible processing pipeline</h3><p>Required stages; not falsely marked complete</p></div></div>
               {["Acquire NASA granules; record product versions, granule IDs, dates, and checksums","Apply product-specific quality flags and scale factors; preserve missing observations","Reproject grids and document spatial and temporal resampling choices","Mask with a versioned Nepal boundary polygon; document pixel inclusion rules","Remove month-of-year climatology and document any trend-removal method","Compute paired anomalies for lags 0 through the requested maximum","Report sample count, Pearson r, confidence intervals, p-values, and multiple-test correction","Export raster/table, parameters, code revision, timestamps, and a run manifest"].map((step, i) => <div className="workflow-step" key={step}><span>{String(i + 1).padStart(2, "0")}</span><p>{step}</p><small style={{ color: "#8a7448" }}>Not run</small></div>)}
