@@ -82,6 +82,20 @@ class StatisticsTests(unittest.TestCase):
         result = analyze_lag_series(rain, ndvi, max_lag=0, min_samples=8)
         self.assertEqual(result["results"][0]["sample_count"], 17)
 
+    def test_effective_sample_size_does_not_bridge_missing_months(self):
+        # Only even-indexed months are observed. Compressing valid values would
+        # falsely treat two-month-separated observations as adjacent.
+        rain = np.full(20, np.nan)
+        ndvi = np.full(20, np.nan)
+        rain[::2] = np.arange(10, dtype=float)
+        ndvi[::2] = np.arange(10, dtype=float) * 2
+        result = analyze_lag_series(rain, ndvi, max_lag=0, min_samples=8)
+        row = result["results"][0]
+        self.assertEqual(row["sample_count"], 10)
+        # There are no adjacent valid months, so both lag-1 estimates are zero
+        # rather than spuriously perfect correlations from compressed values.
+        self.assertEqual(row["effective_sample_size"], 10.0)
+
     def test_invalid_lengths_and_lags_rejected(self):
         with self.assertRaises(ValueError):
             analyze_lag_series([1, 2], [1], max_lag=0)

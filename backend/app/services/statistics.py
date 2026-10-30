@@ -6,10 +6,22 @@ import numpy as np
 from scipy.stats import t as student_t
 
 
-def _lag1(values):
-    if len(values) < 3 or np.std(values[:-1]) == 0 or np.std(values[1:]) == 0:
+def _lag1(values, valid_mask):
+    """Estimate lag-1 autocorrelation using only truly adjacent valid months.
+
+    Do not compress a gappy time series before this calculation: doing so would
+    make observations separated by missing months appear consecutive.
+    """
+    values = np.asarray(values, dtype=float)
+    valid_mask = np.asarray(valid_mask, dtype=bool)
+    if values.ndim != 1 or valid_mask.shape != values.shape:
+        raise ValueError("values and valid_mask must be matching one-dimensional arrays")
+    adjacent = valid_mask[:-1] & valid_mask[1:]
+    previous = values[:-1][adjacent]
+    following = values[1:][adjacent]
+    if previous.size < 3 or np.std(previous) == 0 or np.std(following) == 0:
         return 0.0
-    value = float(np.corrcoef(values[:-1], values[1:])[0, 1])
+    value = float(np.corrcoef(previous, following)[0, 1])
     return value if math.isfinite(value) else 0.0
 
 
@@ -72,10 +84,10 @@ def analyze_lag_series(
 
     rows = []
     for lag in range(max_lag + 1):
-        x = rain[:rain.size - lag] if lag else rain
-        y = ndvi[lag:] if lag else ndvi
-        mask = np.isfinite(x) & np.isfinite(y)
-        x, y = x[mask], y[mask]
+        x_timeline = rain[:rain.size - lag] if lag else rain
+        y_timeline = ndvi[lag:] if lag else ndvi
+        mask = np.isfinite(x_timeline) & np.isfinite(y_timeline)
+        x, y = x_timeline[mask], y_timeline[mask]
         n = int(x.size)
         row = {"lag_months": lag, "sample_count": n, "effective_sample_size": None,
                "pearson_r": None, "p_value": None, "q_value": None,
@@ -92,7 +104,11 @@ def analyze_lag_series(
             row["status"] = "undefined_correlation"
             rows.append(row)
             continue
-        product = float(np.clip(_lag1(x) * _lag1(y), -0.95, 0.95))
+        # Estimate each series' persistence only across adjacent months that
+        # are valid in both aligned series; never bridge a missing-month gap.
+        product = float(np.clip(
+            _lag1(x_timeline, mask) * _lag1(y_timeline, mask), -0.95, 0.95
+        ))
         neff = float(np.clip(n * (1 - product) / (1 + product), 3, n))
         df = max(neff - 2, 1)
         statistic = abs(r) * math.sqrt(df / max(1 - r * r, 1e-15))
