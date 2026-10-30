@@ -12,6 +12,16 @@ class StatisticsTests(unittest.TestCase):
         self.assertIsNone(got[2])
         self.assertAlmostEqual(got[3], 0.04)
 
+
+    def test_bh_rejects_invalid_p_values_instead_of_dropping_them(self):
+        for invalid in (-0.01, 1.01, float("nan"), float("inf"), True, "not-a-p-value"):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    benjamini_hochberg([0.02, invalid, 0.04])
+
+    def test_bh_preserves_only_explicit_missing_values(self):
+        self.assertEqual(benjamini_hochberg([0.01, None, 0.03]), [0.02, None, 0.03])
+
     def test_positive_lag_convention_and_sample_count(self):
         rain = np.arange(1, 19, dtype=float)
         ndvi = np.r_[np.zeros(4), np.arange(1, 15, dtype=float)]

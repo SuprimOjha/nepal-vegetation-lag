@@ -14,10 +14,25 @@ def _lag1(values):
 
 
 def benjamini_hochberg(p_values: Iterable[float | None]) -> list[float | None]:
-    """Adjust a family of p-values; preserve None entries."""
+    """Adjust p-values in [0, 1], preserving explicit None values.
+
+    Invalid numeric values are rejected instead of being silently treated as
+    missing, because silently dropping a p-value changes the tested family.
+    """
     values = list(p_values)
-    valid = [(i, float(p)) for i, p in enumerate(values)
-             if p is not None and math.isfinite(float(p)) and 0 <= float(p) <= 1]
+    valid = []
+    for index, value in enumerate(values):
+        if value is None:
+            continue
+        if isinstance(value, (bool, np.bool_)):
+            raise ValueError("p-values must be numeric values, not booleans")
+        try:
+            p_value = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("p-values must be numeric values or None") from exc
+        if not math.isfinite(p_value) or not 0 <= p_value <= 1:
+            raise ValueError("p-values must be finite and between zero and one")
+        valid.append((index, p_value))
     output = [None] * len(values)
     ordered = sorted(valid, key=lambda item: item[1])
     running = 1.0
