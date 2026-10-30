@@ -15,6 +15,7 @@ from services.processor import (
     NEPAL_BOUNDING_BOX,
     process_nepal_lag_analysis,
 )
+from services.nasa_catalog import extract_granule_metadata
 
 app = FastAPI(
     title="EonPulse Nepal Research API",
@@ -178,29 +179,7 @@ def search_nasa_granules(
             detail=f"NASA catalog lookup failed: {type(exc).__name__}. No granule count or result has been inferred.",
         ) from exc
 
-    granules = []
-    for item in results:
-        umm = getattr(item, "umm", None)
-        if not isinstance(umm, dict) and isinstance(item, dict):
-            umm = item.get("umm", item)
-        if not isinstance(umm, dict):
-            umm = {}
-        temporal_extent = umm.get("TemporalExtent") or {}
-        range_datetime = temporal_extent.get("RangeDateTime") or {}
-        related_urls = umm.get("RelatedUrls") or []
-        urls = [
-            entry.get("URL")
-            for entry in related_urls
-            if isinstance(entry, dict) and entry.get("URL")
-        ]
-        granules.append({
-            "granule_id": umm.get("GranuleUR"),
-            "title": umm.get("CollectionReference", {}).get("ShortName", product),
-            "beginning_datetime": range_datetime.get("BeginningDateTime"),
-            "ending_datetime": range_datetime.get("EndingDateTime"),
-            "producer_granule_id": umm.get("DataGranule", {}).get("Identifiers", [{}])[0].get("Identifier") if umm.get("DataGranule", {}).get("Identifiers") else None,
-            "links": urls[:10],
-        })
+    granules = [extract_granule_metadata(item, product) for item in results]
 
     return {
         "status": "catalog_metadata",
