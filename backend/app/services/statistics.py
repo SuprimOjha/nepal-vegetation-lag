@@ -270,9 +270,19 @@ def benjamini_hochberg_array(p_values: np.ndarray) -> np.ndarray:
     lag independently. NaN cells remain NaN in the output. Infinite and
     out-of-range values are rejected.
     """
-    values = np.asarray(p_values, dtype=float)
-    if values.ndim < 1:
+    # Inspect the original scalar types before float conversion: NumPy would
+    # otherwise coerce booleans to 0/1 and may discard complex components.
+    raw_values = np.asarray(p_values, dtype=object)
+    if raw_values.ndim < 1:
         raise ValueError("p_values must be an array with at least one dimension")
+    if any(isinstance(value, (bool, np.bool_)) for value in raw_values.flat):
+        raise ValueError("p_values must contain numeric values, not booleans")
+    if any(isinstance(value, (complex, np.complexfloating)) for value in raw_values.flat):
+        raise ValueError("p_values must contain real numeric values, not complex values")
+    try:
+        values = np.asarray(raw_values, dtype=float)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("p_values must contain real numeric values") from exc
     if np.isinf(values).any():
         raise ValueError("p_values must not contain infinity")
     finite_mask = np.isfinite(values)
