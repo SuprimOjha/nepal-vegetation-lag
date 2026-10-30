@@ -51,6 +51,17 @@ class StatisticsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     benjamini_hochberg_array(np.array([[0.01, invalid]]))
 
+    def test_lag_analysis_rejects_boolean_and_non_numeric_parameters(self):
+        rain = np.arange(18, dtype=float)
+        for kwargs in (
+            {"max_lag": True}, {"max_lag": 1.5}, {"alpha": True},
+            {"alpha": "0.05"}, {"alpha": float("nan")},
+            {"min_samples": True}, {"min_samples": 8.5},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError):
+                    analyze_lag_series(rain, rain, **kwargs)
+
     def test_positive_lag_convention_and_sample_count(self):
         rain = np.arange(1, 19, dtype=float)
         ndvi = np.r_[np.zeros(4), np.arange(1, 15, dtype=float)]
@@ -119,6 +130,20 @@ class StatisticsTests(unittest.TestCase):
             moving_block_bootstrap_ci(np.arange(10), np.arange(10), block_length=0)
         with self.assertRaises(ValueError):
             moving_block_bootstrap_ci(np.arange(10), np.arange(10), n_resamples=0)
+
+    def test_moving_block_bootstrap_rejects_boolean_and_non_numeric_parameters(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        rain = np.arange(18, dtype=float)
+        for kwargs in (
+            {"block_length": True}, {"block_length": 2.5},
+            {"n_resamples": True}, {"n_resamples": 2.5},
+            {"confidence_level": True}, {"confidence_level": "0.95"},
+            {"confidence_level": float("nan")},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError):
+                    moving_block_bootstrap_ci(rain, rain, **kwargs)
 
 
 if __name__ == "__main__":

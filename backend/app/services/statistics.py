@@ -57,10 +57,16 @@ def analyze_lag_series(
         raise ValueError("Inputs must be one-dimensional")
     if rain.size != ndvi.size:
         raise ValueError("Rainfall and NDVI series must have equal lengths")
-    if not isinstance(max_lag, int) or max_lag < 0 or max_lag >= rain.size:
+    if isinstance(max_lag, (bool, np.bool_)) or not isinstance(max_lag, (int, np.integer)):
+        raise ValueError("max_lag must be an integer")
+    if max_lag < 0 or max_lag >= rain.size:
         raise ValueError("max_lag must be between zero and series_length - 1")
-    if not 0 < alpha < 1:
-        raise ValueError("alpha must be between zero and one")
+    if isinstance(alpha, (bool, np.bool_)) or not isinstance(alpha, (int, float, np.integer, np.floating)):
+        raise ValueError("alpha must be a finite number between zero and one")
+    if not math.isfinite(float(alpha)) or not 0 < alpha < 1:
+        raise ValueError("alpha must be a finite number between zero and one")
+    if isinstance(min_samples, (bool, np.bool_)) or not isinstance(min_samples, (int, np.integer)):
+        raise ValueError("min_samples must be an integer")
     if min_samples < 4:
         raise ValueError("min_samples must be at least four")
 
@@ -138,12 +144,18 @@ def moving_block_bootstrap_ci(
         raise ValueError("Inputs must be one-dimensional")
     if rain.size != ndvi.size:
         raise ValueError("Rainfall and NDVI series must have equal lengths")
-    if not isinstance(block_length, int) or block_length < 1 or block_length > rain.size:
+    if isinstance(block_length, (bool, np.bool_)) or not isinstance(block_length, (int, np.integer)):
+        raise ValueError("block_length must be an integer")
+    if block_length < 1 or block_length > rain.size:
         raise ValueError("block_length must be between one and series_length")
-    if not isinstance(n_resamples, int) or n_resamples < 1:
+    if isinstance(n_resamples, (bool, np.bool_)) or not isinstance(n_resamples, (int, np.integer)):
+        raise ValueError("n_resamples must be an integer")
+    if n_resamples < 1:
         raise ValueError("n_resamples must be a positive integer")
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between zero and one")
+    if isinstance(confidence_level, (bool, np.bool_)) or not isinstance(confidence_level, (int, float, np.integer, np.floating)):
+        raise ValueError("confidence_level must be a finite number between zero and one")
+    if not math.isfinite(float(confidence_level)) or not 0 < confidence_level < 1:
+        raise ValueError("confidence_level must be a finite number between zero and one")
 
     valid = np.isfinite(rain) & np.isfinite(ndvi)
     if int(valid.sum()) < 4:
