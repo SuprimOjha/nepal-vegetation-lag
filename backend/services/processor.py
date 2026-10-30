@@ -5,6 +5,7 @@ MODIS and GPM granules have been downloaded, quality-screened, aligned, and
 processed, it returns a not-computed status rather than illustrative statistics.
 """
 from datetime import datetime, timezone
+from numbers import Integral
 import os
 
 NEPAL_BOUNDING_BOX = (80.05, 26.34, 88.20, 30.45)  # west, south, east, north
@@ -52,6 +53,13 @@ DATA_SOURCES = [
 ]
 
 
+def _require_integer_parameter(value, name: str) -> int:
+    """Reject booleans and fractional values instead of silently accepting them."""
+    if isinstance(value, bool) or not isinstance(value, Integral):
+        raise ValueError(f"{name} must be an integer")
+    return int(value)
+
+
 def process_nepal_lag_analysis(
     zone_id: str = "all",
     max_lag: int = 6,
@@ -59,6 +67,10 @@ def process_nepal_lag_analysis(
     end_year: int = 2024,
 ):
     """Return an explicit unavailable result until validated source arrays exist."""
+    max_lag = _require_integer_parameter(max_lag, "max_lag")
+    start_year = _require_integer_parameter(start_year, "start_year")
+    end_year = _require_integer_parameter(end_year, "end_year")
+
     zone_meta = ZONE_PROFILES.get(zone_id)
     if zone_meta is None:
         raise ValueError(f"Unknown zone: {zone_id}")
