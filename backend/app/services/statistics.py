@@ -171,6 +171,9 @@ def moving_block_bootstrap_ci(
 ) -> dict:
     """Estimate a percentile CI for paired correlation using moving time blocks.
 
+    At least 125 resamples are required so the 100-success minimum can be met
+    while retaining the 80% successful-resample rule.
+
     Blocks are sampled from the original timeline (not from a compressed list of
     valid pairs), so missing months do not make non-adjacent observations appear
     adjacent. This is an exploratory uncertainty estimate, not a causal test.
@@ -187,8 +190,11 @@ def moving_block_bootstrap_ci(
         raise ValueError("block_length must be between one and series_length")
     if isinstance(n_resamples, (bool, np.bool_)) or not isinstance(n_resamples, (int, np.integer)):
         raise ValueError("n_resamples must be an integer")
-    if n_resamples < 1:
-        raise ValueError("n_resamples must be a positive integer")
+    if n_resamples < 125:
+        raise ValueError(
+            "n_resamples must be at least 125 to allow 100 successful resamples "
+            "under the 80% success requirement"
+        )
     if isinstance(confidence_level, (bool, np.bool_)) or not isinstance(confidence_level, (int, float, np.integer, np.floating)):
         raise ValueError("confidence_level must be a finite number between zero and one")
     if not math.isfinite(float(confidence_level)) or not 0 < confidence_level < 1:
