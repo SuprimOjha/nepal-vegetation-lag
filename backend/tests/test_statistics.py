@@ -101,7 +101,9 @@ class StatisticsTests(unittest.TestCase):
         self.assertIsNone(row["q_value"])
         self.assertEqual(row["status"], "insufficient_autocorrelation_pairs")
         self.assertFalse(row["significant"])
-        self.assertEqual(result["status"], "estimated")
+        self.assertEqual(result["status"], "correlation_only")
+        self.assertEqual(result["correlation_status"], "estimated")
+        self.assertEqual(result["inference_status"], "insufficient_data")
         self.assertEqual(result["strongest_absolute_correlation_lag"], 0)
 
     def test_autocorrelation_requires_enough_adjacent_valid_pairs(self):
@@ -118,6 +120,9 @@ class StatisticsTests(unittest.TestCase):
         self.assertEqual(row["autocorrelation_pair_count"], 4)
         self.assertEqual(row["status"], "estimated")
         self.assertIsNotNone(row["p_value"])
+        self.assertEqual(result["status"], "estimated")
+        self.assertEqual(result["correlation_status"], "estimated")
+        self.assertEqual(result["inference_status"], "estimated")
 
     def test_invalid_lengths_and_lags_rejected(self):
         with self.assertRaises(ValueError):
