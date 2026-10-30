@@ -61,12 +61,11 @@ def benjamini_hochberg(p_values: Iterable[float | None]) -> list[float | None]:
     for index, value in enumerate(values):
         if value is None:
             continue
-        if isinstance(value, (bool, np.bool_)):
-            raise ValueError("p-values must be numeric values, not booleans")
-        try:
-            p_value = float(value)
-        except (TypeError, ValueError) as exc:
-            raise ValueError("p-values must be numeric values or None") from exc
+        if isinstance(value, (bool, np.bool_)) or not isinstance(
+            value, (int, float, np.integer, np.floating)
+        ):
+            raise ValueError("p-values must be real numeric scalars or None")
+        p_value = float(value)
         if not math.isfinite(p_value) or not 0 <= p_value <= 1:
             raise ValueError("p-values must be finite and between zero and one")
         valid.append((index, p_value))
