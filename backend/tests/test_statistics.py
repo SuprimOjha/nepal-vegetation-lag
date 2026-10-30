@@ -51,6 +51,20 @@ class StatisticsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     benjamini_hochberg_array(np.array([[0.01, invalid]]))
 
+    def test_array_bh_rejects_boolean_and_complex_p_values(self):
+        from services.statistics import benjamini_hochberg_array
+
+        invalid_inputs = (
+            np.array([[True, False]], dtype=bool),
+            np.array([[0.01, True]], dtype=object),
+            np.array([[0.01 + 0.02j, 0.03]], dtype=complex),
+            np.array([[0.01, 0.03 + 0j]], dtype=object),
+        )
+        for invalid in invalid_inputs:
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    benjamini_hochberg_array(invalid)
+
     def test_lag_analysis_rejects_boolean_and_non_numeric_parameters(self):
         rain = np.arange(18, dtype=float)
         for kwargs in (
