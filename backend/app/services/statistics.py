@@ -8,7 +8,15 @@ from scipy.stats import t as student_t
 
 def _as_real_series(values, name):
     """Convert a one-dimensional iterable to floats without lossy coercion."""
-    raw = np.asarray(list(values), dtype=object)
+    if isinstance(values, (str, bytes, bytearray)):
+        raise ValueError(f"{name} must be a one-dimensional iterable of real numeric values")
+    try:
+        items = list(values)
+    except TypeError as exc:
+        raise ValueError(
+            f"{name} must be a one-dimensional iterable of real numeric values"
+        ) from exc
+    raw = np.asarray(items, dtype=object)
     if raw.ndim != 1:
         raise ValueError(f"{name} must be one-dimensional")
     if any(isinstance(value, (bool, np.bool_)) for value in raw):
