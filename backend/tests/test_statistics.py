@@ -170,8 +170,23 @@ class StatisticsTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             moving_block_bootstrap_ci(np.arange(10), np.arange(10), block_length=0)
-        with self.assertRaises(ValueError):
-            moving_block_bootstrap_ci(np.arange(10), np.arange(10), n_resamples=0)
+        for count in (0, 1, 100, 124):
+            with self.subTest(n_resamples=count):
+                with self.assertRaisesRegex(ValueError, "at least 125"):
+                    moving_block_bootstrap_ci(
+                        np.arange(10), np.arange(10), n_resamples=count
+                    )
+
+    def test_moving_block_bootstrap_accepts_minimum_resample_count(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        rain = np.sin(np.arange(48) / 3) + np.arange(48) / 30
+        ndvi = np.roll(rain, 2) + np.cos(np.arange(48) / 5) * 0.1
+        result = moving_block_bootstrap_ci(
+            rain, ndvi, block_length=4, n_resamples=125, random_state=17
+        )
+        self.assertGreaterEqual(result["successful_resamples"], 100)
+        self.assertEqual(result["requested_resamples"], 125)
 
     def test_moving_block_bootstrap_rejects_boolean_and_non_numeric_parameters(self):
         from services.statistics import moving_block_bootstrap_ci
