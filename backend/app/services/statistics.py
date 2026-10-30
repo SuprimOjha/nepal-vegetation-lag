@@ -100,3 +100,93 @@ def analyze_lag_series(
                    "check robustness with block bootstrap and sensitivity tests. Correlation does "
                    "not establish causation. Spatial analysis must correct across all tested pixels and lags.",
     }
+
+
+
+def moving_block_bootstrap_ci(
+    rainfall_anomaly: Iterable[float],
+    ndvi_anomaly: Iterable[float],
+    block_length: int = 3,
+    n_resamples: int = 1000,
+    confidence_level: float = 0.95,
+    random_state: int | None = 0,
+) -> dict:
+    """Estimate a percentile CI for paired correlation using moving time blocks.
+
+    Blocks are sampled from the original timeline (not from a compressed list of
+    valid pairs), so missing months do not make non-adjacent observations appear
+    adjacent. This is an exploratory uncertainty estimate, not a causal test.
+    """
+    rain = np.asarray(list(rainfall_anomaly), dtype=float)
+    ndvi = np.asarray(list(ndvi_anomaly), dtype=float)
+    if rain.ndim != 1 or ndvi.ndim != 1:
+        raise ValueError("Inputs must be one-dimensional")
+    if rain.size != ndvi.size:
+        raise ValueError("Rainfall and NDVI series must have equal lengths")
+    if not isinstance(block_length, int) or block_length < 1 or block_length > rain.size:
+        raise ValueError("block_length must be between one and series_length")
+    if not isinstance(n_resamples, int) or n_resamples < 1:
+        raise ValueError("n_resamples must be a positive integer")
+    if not 0 < confidence_level < 1:
+        raise ValueError("confidence_level must be between zero and one")
+
+    valid = np.isfinite(rain) & np.isfinite(ndvi)
+    if int(valid.sum()) < 4:
+        return {
+            "status": "insufficient_data",
+            "pearson_r_ci": None,
+            "successful_resamples": 0,
+            "requested_resamples": n_resamples,
+            "block_length": block_length,
+            "confidence_level": confidence_level,
+            "method": "moving_block_percentile_bootstrap",
+        }
+
+    rng = np.random.default_rng(random_state)
+    n = rain.size
+    blocks_per_sample = math.ceil(n / block_length)
+    max_start = n - block_length
+    estimates = []
+
+    for _ in range(n_resamples):
+        starts = rng.integers(0, max_start + 1, size=blocks_per_sample)
+        indices = np.concatenate([
+            np.arange(start, start + block_length) for start in starts
+        ])[:n]
+        x, y = rain[indices], ndvi[indices]
+        paired = np.isfinite(x) & np.isfinite(y)
+        x, y = x[paired], y[paired]
+        if x.size < 4 or np.std(x) == 0 or np.std(y) == 0:
+            continue
+        estimate = float(np.corrcoef(x, y)[0, 1])
+        if math.isfinite(estimate):
+            estimates.append(estimate)
+
+    minimum_successes = max(100, math.ceil(0.8 * n_resamples))
+    if len(estimates) < minimum_successes:
+        return {
+            "status": "insufficient_valid_resamples",
+            "pearson_r_ci": None,
+            "successful_resamples": len(estimates),
+            "requested_resamples": n_resamples,
+            "block_length": block_length,
+            "confidence_level": confidence_level,
+            "method": "moving_block_percentile_bootstrap",
+            "warning": "Too few valid resamples produced finite, non-constant paired series.",
+        }
+
+    tail = (1 - confidence_level) / 2
+    lower, upper = np.quantile(estimates, [tail, 1 - tail])
+    return {
+        "status": "estimated",
+        "pearson_r_ci": [float(lower), float(upper)],
+        "successful_resamples": len(estimates),
+        "requested_resamples": n_resamples,
+        "block_length": block_length,
+        "confidence_level": confidence_level,
+        "method": "moving_block_percentile_bootstrap",
+        "warning": (
+            "Exploratory interval only. Results depend on block length, stationarity, "
+            "and the available time series; inspect sensitivity across block lengths."
+        ),
+    }
