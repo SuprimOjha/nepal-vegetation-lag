@@ -14,7 +14,10 @@ class StatisticsTests(unittest.TestCase):
 
 
     def test_bh_rejects_invalid_p_values_instead_of_dropping_them(self):
-        for invalid in (-0.01, 1.01, float("nan"), float("inf"), True, "not-a-p-value"):
+        for invalid in (
+            -0.01, 1.01, float("nan"), float("inf"), True,
+            "not-a-p-value", "0.05", b"0.05", 0.05 + 0j, np.array(0.05),
+        ):
             with self.subTest(invalid=invalid):
                 with self.assertRaises(ValueError):
                     benjamini_hochberg([0.02, invalid, 0.04])
