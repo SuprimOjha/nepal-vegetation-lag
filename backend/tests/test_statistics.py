@@ -244,7 +244,8 @@ class StatisticsTests(unittest.TestCase):
             {"block_length": True}, {"block_length": 2.5},
             {"n_resamples": True}, {"n_resamples": 2.5},
             {"confidence_level": True}, {"confidence_level": "0.95"},
-            {"confidence_level": float("nan")},
+            {"confidence_level": float("nan")}, {"random_state": True},
+            {"random_state": 1.5}, {"random_state": "17"},
         ):
             with self.subTest(kwargs=kwargs):
                 with self.assertRaises(ValueError):
