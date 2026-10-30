@@ -211,6 +211,11 @@ def moving_block_bootstrap_ci(
         raise ValueError("confidence_level must be a finite number between zero and one")
     if not math.isfinite(float(confidence_level)) or not 0 < confidence_level < 1:
         raise ValueError("confidence_level must be a finite number between zero and one")
+    if random_state is not None and (
+        isinstance(random_state, (bool, np.bool_))
+        or not isinstance(random_state, (int, np.integer))
+    ):
+        raise ValueError("random_state must be an integer or None")
 
     valid = np.isfinite(rain) & np.isfinite(ndvi)
     if int(valid.sum()) < 4:
