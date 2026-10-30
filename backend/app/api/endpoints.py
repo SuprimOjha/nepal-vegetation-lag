@@ -31,12 +31,18 @@ def get_datasets():
 
 @router.get("/regions")
 def get_regions():
-    """Returns initial study regions including Nepal focus areas."""
+    """Return study-zone metadata without presenting uncomputed results."""
+    regions = [
+        {"id": "all", "name": "All Nepal Aggregate", "country": "Nepal"},
+        {"id": "terai", "name": "Terai Lowlands", "country": "Nepal"},
+        {"id": "siwalik", "name": "Siwalik Hills", "country": "Nepal"},
+        {"id": "midhills", "name": "Mid-Hills", "country": "Nepal"},
+        {"id": "kathmandu", "name": "Kathmandu Valley", "country": "Nepal"},
+        {"id": "highmountains", "name": "High Mountains & Himalayas", "country": "Nepal"},
+    ]
     return {
-        "regions": [
-            {"id": "nepal_east", "name": "Eastern Nepal", "country": "Nepal", "default_lag_months": 2, "r": 0.68},
-            {"id": "nepal_terai", "name": "Terai Lowlands", "country": "Nepal / India", "default_lag_months": 1, "r": 0.74},
-            {"id": "gangetic_plain", "name": "Indo-Gangetic Plain", "country": "India", "default_lag_months": 1, "r": 0.72},
-            {"id": "bangladesh_delta", "name": "Bangladesh Delta", "country": "Bangladesh", "default_lag_months": 1, "r": 0.77}
-        ]
+        "status": "not_computed",
+        "statistics_status": "not_computed",
+        "statistics_available": False,
+        "regions": regions,
     }
