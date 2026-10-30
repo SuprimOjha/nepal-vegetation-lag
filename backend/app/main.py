@@ -173,13 +173,18 @@ def search_nasa_granules(
             bounding_box=NEPAL_BOUNDING_BOX,
             count=limit,
         )
+        # Normalize inside the guarded block as well: an unexpected upstream
+        # response (for example None instead of an iterable) is a catalog
+        # failure, not an unhandled application error.
+        granules = [extract_granule_metadata(item, product) for item in results]
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail=f"NASA catalog lookup failed: {type(exc).__name__}. No granule count or result has been inferred.",
+            detail=(
+                "NASA catalog lookup or metadata normalization failed: "
+                f"{type(exc).__name__}. No granule count or result has been inferred."
+            ),
         ) from exc
-
-    granules = [extract_granule_metadata(item, product) for item in results]
 
     return {
         "status": "catalog_metadata",
