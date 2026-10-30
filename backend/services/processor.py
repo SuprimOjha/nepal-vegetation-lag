@@ -4,6 +4,7 @@ This module intentionally does not manufacture satellite measurements. Until the
 MODIS and GPM granules have been downloaded, quality-screened, aligned, and
 processed, it returns a not-computed status rather than illustrative statistics.
 """
+from copy import deepcopy
 from datetime import datetime, timezone
 from numbers import Integral
 import os
@@ -98,7 +99,8 @@ def process_nepal_lag_analysis(
         "bounding_box": list(NEPAL_BOUNDING_BOX),
         "time_series": None,
         "lag_analysis": [],
-        "data_sources": DATA_SOURCES,
+        # Return a deep copy so callers cannot mutate process-wide source metadata.
+        "data_sources": deepcopy(DATA_SOURCES),
         "provenance": {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
             "calculation_performed": False,

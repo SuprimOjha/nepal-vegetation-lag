@@ -59,6 +59,19 @@ class AnalysisIntegrityTests(unittest.TestCase):
         self.assertGreaterEqual(len(DATA_SOURCES), 2)
         self.assertTrue(all(source["status"] in {"not_downloaded", "reference_only"} for source in DATA_SOURCES))
 
+    def test_response_source_metadata_is_deeply_isolated(self):
+        first = process_nepal_lag_analysis()
+        first["data_sources"][0]["status"] = "downloaded"
+        first["data_sources"][0]["nested"] = {"changed": True}
+        first["data_sources"].append({"short_name": "CALLER_MUTATION"})
+
+        second = process_nepal_lag_analysis()
+        self.assertEqual(second["data_sources"], DATA_SOURCES)
+        self.assertNotIn("nested", second["data_sources"][0])
+        self.assertEqual(len(second["data_sources"]), len(DATA_SOURCES))
+        self.assertIsNot(first["data_sources"], second["data_sources"])
+        self.assertIsNot(first["data_sources"][0], second["data_sources"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
