@@ -6,6 +6,21 @@ import numpy as np
 from scipy.stats import t as student_t
 
 
+def _as_real_series(values, name):
+    """Convert a one-dimensional iterable to floats without lossy coercion."""
+    raw = np.asarray(list(values), dtype=object)
+    if raw.ndim != 1:
+        raise ValueError(f"{name} must be one-dimensional")
+    if any(isinstance(value, (bool, np.bool_)) for value in raw):
+        raise ValueError(f"{name} must contain real numeric values, not booleans")
+    if any(isinstance(value, (complex, np.complexfloating)) for value in raw):
+        raise ValueError(f"{name} must contain real numeric values, not complex values")
+    try:
+        return np.asarray(raw, dtype=float)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{name} must contain real numeric values") from exc
+
+
 def _lag1(values, valid_mask):
     """Estimate lag-1 autocorrelation from adjacent valid months.
 
@@ -65,10 +80,8 @@ def analyze_lag_series(
     min_samples: int = 12,
 ) -> dict:
     """Pair rainfall[t] with NDVI[t + lag]. Approximate p-values are exploratory."""
-    rain = np.asarray(list(rainfall_anomaly), dtype=float)
-    ndvi = np.asarray(list(ndvi_anomaly), dtype=float)
-    if rain.ndim != 1 or ndvi.ndim != 1:
-        raise ValueError("Inputs must be one-dimensional")
+    rain = _as_real_series(rainfall_anomaly, "rainfall_anomaly")
+    ndvi = _as_real_series(ndvi_anomaly, "ndvi_anomaly")
     if rain.size != ndvi.size:
         raise ValueError("Rainfall and NDVI series must have equal lengths")
     if isinstance(max_lag, (bool, np.bool_)) or not isinstance(max_lag, (int, np.integer)):
@@ -178,10 +191,8 @@ def moving_block_bootstrap_ci(
     valid pairs), so missing months do not make non-adjacent observations appear
     adjacent. This is an exploratory uncertainty estimate, not a causal test.
     """
-    rain = np.asarray(list(rainfall_anomaly), dtype=float)
-    ndvi = np.asarray(list(ndvi_anomaly), dtype=float)
-    if rain.ndim != 1 or ndvi.ndim != 1:
-        raise ValueError("Inputs must be one-dimensional")
+    rain = _as_real_series(rainfall_anomaly, "rainfall_anomaly")
+    ndvi = _as_real_series(ndvi_anomaly, "ndvi_anomaly")
     if rain.size != ndvi.size:
         raise ValueError("Rainfall and NDVI series must have equal lengths")
     if isinstance(block_length, (bool, np.bool_)) or not isinstance(block_length, (int, np.integer)):
