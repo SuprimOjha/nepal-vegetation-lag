@@ -7,10 +7,11 @@ from scipy.stats import t as student_t
 
 
 def _lag1(values, valid_mask):
-    """Estimate lag-1 autocorrelation using only truly adjacent valid months.
+    """Estimate lag-1 autocorrelation from adjacent valid months.
 
-    Do not compress a gappy time series before this calculation: doing so would
-    make observations separated by missing months appear consecutive.
+    Returns (correlation, pair_count). Correlation is None when the original
+    timeline does not contain enough usable adjacent pairs to estimate it.
+    Missing months are never compressed into artificial adjacency.
     """
     values = np.asarray(values, dtype=float)
     valid_mask = np.asarray(valid_mask, dtype=bool)
@@ -19,10 +20,11 @@ def _lag1(values, valid_mask):
     adjacent = valid_mask[:-1] & valid_mask[1:]
     previous = values[:-1][adjacent]
     following = values[1:][adjacent]
-    if previous.size < 3 or np.std(previous) == 0 or np.std(following) == 0:
-        return 0.0
+    pair_count = int(previous.size)
+    if pair_count < 3 or np.std(previous) == 0 or np.std(following) == 0:
+        return None, pair_count
     value = float(np.corrcoef(previous, following)[0, 1])
-    return value if math.isfinite(value) else 0.0
+    return (value if math.isfinite(value) else None), pair_count
 
 
 def benjamini_hochberg(p_values: Iterable[float | None]) -> list[float | None]:
@@ -89,9 +91,9 @@ def analyze_lag_series(
         mask = np.isfinite(x_timeline) & np.isfinite(y_timeline)
         x, y = x_timeline[mask], y_timeline[mask]
         n = int(x.size)
-        row = {"lag_months": lag, "sample_count": n, "effective_sample_size": None,
-               "pearson_r": None, "p_value": None, "q_value": None,
-               "significant": False, "status": "insufficient_samples"}
+        row = {"lag_months": lag, "sample_count": n, "autocorrelation_pair_count": 0,
+               "effective_sample_size": None, "pearson_r": None, "p_value": None,
+               "q_value": None, "significant": False, "status": "insufficient_samples"}
         if n < min_samples:
             rows.append(row)
             continue
@@ -104,16 +106,26 @@ def analyze_lag_series(
             row["status"] = "undefined_correlation"
             rows.append(row)
             continue
-        # Estimate each series' persistence only across adjacent months that
-        # are valid in both aligned series; never bridge a missing-month gap.
-        product = float(np.clip(
-            _lag1(x_timeline, mask) * _lag1(y_timeline, mask), -0.95, 0.95
-        ))
+        # Estimate persistence only from adjacent valid months in the
+        # original aligned timeline. Do not silently assume independence when
+        # gaps leave too few adjacent pairs to estimate autocorrelation.
+        rain_rho, rain_pair_count = _lag1(x_timeline, mask)
+        ndvi_rho, ndvi_pair_count = _lag1(y_timeline, mask)
+        pair_count = min(rain_pair_count, ndvi_pair_count)
+        row.update({"pearson_r": r, "autocorrelation_pair_count": pair_count})
+        if rain_rho is None or ndvi_rho is None:
+            row["status"] = (
+                "insufficient_autocorrelation_pairs"
+                if pair_count < 3 else "undefined_autocorrelation"
+            )
+            rows.append(row)
+            continue
+        product = float(np.clip(rain_rho * ndvi_rho, -0.95, 0.95))
         neff = float(np.clip(n * (1 - product) / (1 + product), 3, n))
         df = max(neff - 2, 1)
         statistic = abs(r) * math.sqrt(df / max(1 - r * r, 1e-15))
         p = float(np.clip(2 * student_t.sf(statistic, df), 0, 1))
-        row.update({"effective_sample_size": round(neff, 4), "pearson_r": r,
+        row.update({"effective_sample_size": round(neff, 4),
                     "p_value": p, "status": "estimated"})
         rows.append(row)
 
@@ -124,9 +136,10 @@ def analyze_lag_series(
         row["q_value"] = q
         row["significant"] = q is not None and q < alpha and row["status"] == "estimated"
     estimated = [row for row in rows if row["status"] == "estimated"]
-    strongest = max(estimated, key=lambda row: abs(row["pearson_r"])) if estimated else None
+    correlations = [row for row in rows if row["pearson_r"] is not None]
+    strongest = max(correlations, key=lambda row: abs(row["pearson_r"])) if correlations else None
     return {
-        "status": "estimated" if estimated else "insufficient_data",
+        "status": "estimated" if correlations else "insufficient_data",
         "lag_convention": "rainfall_anomaly[t] versus ndvi_anomaly[t + lag_months]",
         "method": "Pearson correlation with lag-1 effective-sample-size approximation",
         "multiple_testing": "Benjamini-Hochberg across estimated lags in this series only",
