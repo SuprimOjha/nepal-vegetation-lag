@@ -216,6 +216,8 @@ class StatisticsTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             moving_block_bootstrap_ci(np.arange(10), np.arange(10), block_length=0)
+        with self.assertRaisesRegex(ValueError, "strictly less than series_length"):
+            moving_block_bootstrap_ci(np.arange(10), np.arange(10), block_length=10)
         for count in (0, 1, 100, 124):
             with self.subTest(n_resamples=count):
                 with self.assertRaisesRegex(ValueError, "at least 125"):

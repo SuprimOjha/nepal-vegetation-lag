@@ -185,7 +185,8 @@ def moving_block_bootstrap_ci(
     """Estimate a percentile CI for paired correlation using moving time blocks.
 
     At least 125 resamples are required so the 100-success minimum can be met
-    while retaining the 80% successful-resample rule.
+    while retaining the 80% successful-resample rule. The block length must be
+    shorter than the series so resampling has more than one possible block start.
 
     Blocks are sampled from the original timeline (not from a compressed list of
     valid pairs), so missing months do not make non-adjacent observations appear
@@ -197,8 +198,8 @@ def moving_block_bootstrap_ci(
         raise ValueError("Rainfall and NDVI series must have equal lengths")
     if isinstance(block_length, (bool, np.bool_)) or not isinstance(block_length, (int, np.integer)):
         raise ValueError("block_length must be an integer")
-    if block_length < 1 or block_length > rain.size:
-        raise ValueError("block_length must be between one and series_length")
+    if block_length < 1 or block_length >= rain.size:
+        raise ValueError("block_length must be at least one and strictly less than series_length")
     if isinstance(n_resamples, (bool, np.bool_)) or not isinstance(n_resamples, (int, np.integer)):
         raise ValueError("n_resamples must be an integer")
     if n_resamples < 125:
