@@ -44,5 +44,43 @@ class StatisticsTests(unittest.TestCase):
         self.assertTrue(all(row["status"] == "insufficient_samples" for row in result["results"]))
 
 
+    def test_moving_block_bootstrap_is_reproducible_and_bounded(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        rain = np.sin(np.arange(48) / 3) + np.arange(48) / 30
+        ndvi = np.roll(rain, 2) + np.cos(np.arange(48) / 5) * 0.1
+        first = moving_block_bootstrap_ci(
+            rain, ndvi, block_length=4, n_resamples=250, random_state=17
+        )
+        second = moving_block_bootstrap_ci(
+            rain, ndvi, block_length=4, n_resamples=250, random_state=17
+        )
+        self.assertEqual(first, second)
+        self.assertEqual(first["status"], "estimated")
+        self.assertEqual(len(first["pearson_r_ci"]), 2)
+        self.assertLessEqual(-1, first["pearson_r_ci"][0])
+        self.assertLessEqual(first["pearson_r_ci"][1], 1)
+
+    def test_moving_block_bootstrap_keeps_missing_months_in_timeline(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        rain = np.arange(40, dtype=float)
+        ndvi = rain + np.sin(rain)
+        ndvi[8:30] = np.nan
+        result = moving_block_bootstrap_ci(
+            rain, ndvi, block_length=3, n_resamples=250, random_state=4
+        )
+        self.assertIn(result["status"], {"estimated", "insufficient_valid_resamples"})
+        self.assertEqual(result["method"], "moving_block_percentile_bootstrap")
+
+    def test_moving_block_bootstrap_rejects_invalid_parameters(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        with self.assertRaises(ValueError):
+            moving_block_bootstrap_ci(np.arange(10), np.arange(10), block_length=0)
+        with self.assertRaises(ValueError):
+            moving_block_bootstrap_ci(np.arange(10), np.arange(10), n_resamples=0)
+
+
 if __name__ == "__main__":
     unittest.main()
