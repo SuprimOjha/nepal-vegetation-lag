@@ -32,8 +32,8 @@ class StatisticsTests(unittest.TestCase):
         ])
         got = benjamini_hochberg_array(p_values)
         expected = np.array([
-            [[0.07 / 7, 0.07], [0.07, np.nan]],
-            [[0.07, 0.28,], [0.5833333333, 0.8]],
+            [[0.07, 0.07], [0.07, np.nan]],
+            [[0.07, 0.28], [0.5833333333, 0.8]],
         ])
         np.testing.assert_allclose(got, expected, equal_nan=True)
 
