@@ -38,6 +38,23 @@ class AnalysisIntegrityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             process_nepal_lag_analysis(max_lag=25)
 
+    def test_boolean_and_fractional_integer_parameters_are_rejected(self):
+        invalid_values = (True, False, 1.5, 2003.5, "6", "2020")
+        for value in invalid_values:
+            with self.subTest(value=repr(value)):
+                with self.assertRaisesRegex(ValueError, "must be an integer"):
+                    process_nepal_lag_analysis(max_lag=value)
+                with self.assertRaisesRegex(ValueError, "must be an integer"):
+                    process_nepal_lag_analysis(start_year=value)
+                with self.assertRaisesRegex(ValueError, "must be an integer"):
+                    process_nepal_lag_analysis(end_year=value)
+
+    def test_integral_parameters_are_normalized_to_python_ints(self):
+        result = process_nepal_lag_analysis(max_lag=6, start_year=2003, end_year=2024)
+        self.assertIs(type(result["max_lag_months"]), int)
+        self.assertIs(type(result["year_start"]), int)
+        self.assertIs(type(result["year_end"]), int)
+
     def test_source_catalog_is_not_claimed_as_downloaded(self):
         self.assertGreaterEqual(len(DATA_SOURCES), 2)
         self.assertTrue(all(source["status"] in {"not_downloaded", "reference_only"} for source in DATA_SOURCES))
