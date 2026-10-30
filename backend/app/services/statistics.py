@@ -205,3 +205,29 @@ def moving_block_bootstrap_ci(
             "and the available time series; inspect sensitivity across block lengths."
         ),
     }
+
+
+def benjamini_hochberg_array(p_values: np.ndarray) -> np.ndarray:
+    """Apply BH correction across an entire array-wide testing family.
+
+    Intended for raster stacks such as (lag, row, column): every finite p-value
+    participates in one correction family, rather than correcting each pixel or
+    lag independently. NaN cells remain NaN in the output. Infinite and
+    out-of-range values are rejected.
+    """
+    values = np.asarray(p_values, dtype=float)
+    if values.ndim < 1:
+        raise ValueError("p_values must be an array with at least one dimension")
+    if np.isinf(values).any():
+        raise ValueError("p_values must not contain infinity")
+    finite_mask = np.isfinite(values)
+    finite_values = values[finite_mask]
+    if np.any((finite_values < 0) | (finite_values > 1)):
+        raise ValueError("finite p_values must be between zero and one")
+
+    adjusted = np.full(values.shape, np.nan, dtype=float)
+    if finite_values.size == 0:
+        return adjusted
+    corrected = benjamini_hochberg(finite_values.tolist())
+    adjusted[finite_mask] = np.asarray(corrected, dtype=float)
+    return adjusted
