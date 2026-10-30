@@ -92,9 +92,32 @@ class StatisticsTests(unittest.TestCase):
         result = analyze_lag_series(rain, ndvi, max_lag=0, min_samples=8)
         row = result["results"][0]
         self.assertEqual(row["sample_count"], 10)
-        # There are no adjacent valid months, so both lag-1 estimates are zero
-        # rather than spuriously perfect correlations from compressed values.
-        self.assertEqual(row["effective_sample_size"], 10.0)
+        # There are no adjacent valid months. Keep the descriptive
+        # correlation, but do not invent an independence-based p-value.
+        self.assertIsNotNone(row["pearson_r"])
+        self.assertEqual(row["autocorrelation_pair_count"], 0)
+        self.assertIsNone(row["effective_sample_size"])
+        self.assertIsNone(row["p_value"])
+        self.assertIsNone(row["q_value"])
+        self.assertEqual(row["status"], "insufficient_autocorrelation_pairs")
+        self.assertFalse(row["significant"])
+        self.assertEqual(result["status"], "estimated")
+        self.assertEqual(result["strongest_absolute_correlation_lag"], 0)
+
+    def test_autocorrelation_requires_enough_adjacent_valid_pairs(self):
+        rain = np.arange(20, dtype=float)
+        ndvi = rain * 2 + np.sin(rain)
+        # Four short adjacent runs provide enough pairs for the lag-1 estimate.
+        valid = np.zeros(20, dtype=bool)
+        valid[[0, 1, 5, 6, 10, 11, 15, 16]] = True
+        rain[~valid] = np.nan
+        ndvi[~valid] = np.nan
+        result = analyze_lag_series(rain, ndvi, max_lag=0, min_samples=4)
+        row = result["results"][0]
+        self.assertEqual(row["sample_count"], 8)
+        self.assertEqual(row["autocorrelation_pair_count"], 4)
+        self.assertEqual(row["status"], "estimated")
+        self.assertIsNotNone(row["p_value"])
 
     def test_invalid_lengths_and_lags_rejected(self):
         with self.assertRaises(ValueError):
