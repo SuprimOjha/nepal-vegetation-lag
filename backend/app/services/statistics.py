@@ -139,7 +139,15 @@ def analyze_lag_series(
     correlations = [row for row in rows if row["pearson_r"] is not None]
     strongest = max(correlations, key=lambda row: abs(row["pearson_r"])) if correlations else None
     return {
-        "status": "estimated" if correlations else "insufficient_data",
+        # Keep descriptive correlation availability separate from inferential
+        # availability: a Pearson r alone does not mean p/q-values were estimated.
+        "status": (
+            "estimated" if estimated else
+            "correlation_only" if correlations else
+            "insufficient_data"
+        ),
+        "correlation_status": "estimated" if correlations else "insufficient_data",
+        "inference_status": "estimated" if estimated else "insufficient_data",
         "lag_convention": "rainfall_anomaly[t] versus ndvi_anomaly[t + lag_months]",
         "method": "Pearson correlation with lag-1 effective-sample-size approximation",
         "multiple_testing": "Benjamini-Hochberg across estimated lags in this series only",
