@@ -65,6 +65,38 @@ class StatisticsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     benjamini_hochberg_array(invalid)
 
+    def test_lag_analysis_rejects_boolean_and_complex_series(self):
+        valid = np.arange(18, dtype=float)
+        invalid_series = (
+            np.ones(18, dtype=bool),
+            np.array([0.0] * 17 + [True], dtype=object),
+            np.arange(18, dtype=complex) + 1j,
+            np.array([complex(value, 0) for value in range(18)], dtype=object),
+        )
+        for invalid in invalid_series:
+            with self.subTest(dtype=str(invalid.dtype)):
+                with self.assertRaises(ValueError):
+                    analyze_lag_series(invalid, valid, max_lag=0, min_samples=8)
+                with self.assertRaises(ValueError):
+                    analyze_lag_series(valid, invalid, max_lag=0, min_samples=8)
+
+    def test_bootstrap_rejects_boolean_and_complex_series(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        valid = np.arange(18, dtype=float)
+        invalid_series = (
+            np.ones(18, dtype=bool),
+            np.array([0.0] * 17 + [True], dtype=object),
+            np.arange(18, dtype=complex) + 1j,
+            np.array([complex(value, 0) for value in range(18)], dtype=object),
+        )
+        for invalid in invalid_series:
+            with self.subTest(dtype=str(invalid.dtype)):
+                with self.assertRaises(ValueError):
+                    moving_block_bootstrap_ci(invalid, valid, n_resamples=125)
+                with self.assertRaises(ValueError):
+                    moving_block_bootstrap_ci(valid, invalid, n_resamples=125)
+
     def test_lag_analysis_rejects_boolean_and_non_numeric_parameters(self):
         rain = np.arange(18, dtype=float)
         for kwargs in (
