@@ -97,6 +97,19 @@ class StatisticsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     moving_block_bootstrap_ci(valid, invalid, n_resamples=125)
 
+    def test_series_inputs_reject_scalars_and_text(self):
+        from services.statistics import moving_block_bootstrap_ci
+
+        valid = np.arange(18, dtype=float)
+        invalid_inputs = (42, 3.14, None, "12345", b"12345", bytearray(b"12345"),
+                          np.array(7.0))
+        for invalid in invalid_inputs:
+            with self.subTest(invalid=repr(invalid)):
+                with self.assertRaises(ValueError):
+                    analyze_lag_series(invalid, valid, max_lag=0, min_samples=4)
+                with self.assertRaises(ValueError):
+                    moving_block_bootstrap_ci(invalid, valid, n_resamples=125)
+
     def test_lag_analysis_rejects_boolean_and_non_numeric_parameters(self):
         rain = np.arange(18, dtype=float)
         for kwargs in (
