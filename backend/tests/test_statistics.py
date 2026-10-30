@@ -22,6 +22,35 @@ class StatisticsTests(unittest.TestCase):
     def test_bh_preserves_only_explicit_missing_values(self):
         self.assertEqual(benjamini_hochberg([0.01, None, 0.03]), [0.02, None, 0.03])
 
+
+    def test_array_bh_corrects_one_family_across_all_pixels_and_lags(self):
+        from services.statistics import benjamini_hochberg_array
+
+        p_values = np.array([
+            [[0.01, 0.04], [0.03, np.nan]],
+            [[0.02, 0.20], [0.50, 0.80]],
+        ])
+        got = benjamini_hochberg_array(p_values)
+        expected = np.array([
+            [[0.07, 0.07], [0.07, np.nan]],
+            [[0.07, 0.28], [0.5833333333, 0.8]],
+        ])
+        np.testing.assert_allclose(got, expected, equal_nan=True)
+
+    def test_array_bh_preserves_all_missing_cells(self):
+        from services.statistics import benjamini_hochberg_array
+
+        got = benjamini_hochberg_array(np.full((2, 3), np.nan))
+        self.assertTrue(np.isnan(got).all())
+
+    def test_array_bh_rejects_infinite_and_out_of_range_values(self):
+        from services.statistics import benjamini_hochberg_array
+
+        for invalid in (np.inf, -np.inf, -0.1, 1.1):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    benjamini_hochberg_array(np.array([[0.01, invalid]]))
+
     def test_positive_lag_convention_and_sample_count(self):
         rain = np.arange(1, 19, dtype=float)
         ndvi = np.r_[np.zeros(4), np.arange(1, 15, dtype=float)]
