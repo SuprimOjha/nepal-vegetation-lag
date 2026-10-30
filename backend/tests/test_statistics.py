@@ -107,8 +107,7 @@ class StatisticsTests(unittest.TestCase):
     def test_autocorrelation_requires_enough_adjacent_valid_pairs(self):
         rain = np.arange(20, dtype=float)
         ndvi = rain * 2 + np.sin(rain)
-        # Three isolated valid pairs are insufficient to estimate a stable
-        # lag-1 autocorrelation, despite enough total paired samples.
+        # Four short adjacent runs provide enough pairs for the lag-1 estimate.
         valid = np.zeros(20, dtype=bool)
         valid[[0, 1, 5, 6, 10, 11, 15, 16]] = True
         rain[~valid] = np.nan
